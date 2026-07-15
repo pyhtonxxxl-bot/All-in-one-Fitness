@@ -1,0 +1,69 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Monats-Kalender Vorschläge</title>
+<style>
+:root{--bg:#0A0A0C;--tp:#F5F5F7;--ts:#A1A1A6;--tt:#6E6E73;--hair:rgba(255,255,255,.1);--track:rgba(255,255,255,.09);
+--blue:#2A5EA0;--blue-hi:#3E79C6;--blue-lo:#123C72;--font:-apple-system,"SF Pro Text","Inter",system-ui,sans-serif;--num:-apple-system,"SF Pro Display",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tp);font-family:var(--font);padding:26px 18px 44px;position:relative;overflow-x:hidden;font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:-10%;z-index:-1;background:radial-gradient(38% 30% at 78% 6%,rgba(42,110,180,.30),transparent 60%),radial-gradient(40% 34% at 12% 92%,rgba(46,84,156,.16),transparent 60%);filter:blur(50px)}
+h1{font-size:22px;font-weight:700;letter-spacing:-.02em}.intro{color:var(--tt);font-size:13px;margin:5px 0 20px}
+.card{background:rgba(255,255,255,.06);border:1px solid var(--hair);border-radius:20px;padding:20px;backdrop-filter:blur(24px) saturate(1.2);margin-bottom:16px;max-width:440px}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--blue-hi);background:rgba(42,94,160,.16);border:1px solid rgba(62,121,198,.3);padding:4px 9px;border-radius:999px;margin-bottom:14px}
+.ct{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tt);margin-bottom:14px}
+/* Streak-Kopf (Kontext) */
+.shead{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.sico{color:var(--blue-hi)}.sico svg{width:28px;height:28px}
+.snum{font-family:var(--num);font-size:32px;font-weight:700}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:7px}
+.dow span{text-align:center;font-size:10px;color:var(--tt);font-weight:600}
+.grid7{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+/* A: Heatmap binär */
+.cellA{aspect-ratio:1;border-radius:7px;background:var(--track)}
+.cellA.on{background:var(--blue)}
+/* B: Kalender mit Zahlen */
+.cellB{aspect-ratio:1;border-radius:8px;background:var(--track);display:grid;place-items:center;font-size:12px;color:var(--tt);font-family:var(--num)}
+.cellB.on{background:var(--blue);color:#fff;font-weight:600}
+.cellB.empty{background:transparent}
+/* C: Intensität */
+.cellC{aspect-ratio:1;border-radius:7px;background:var(--track)}
+.legend{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:11px;color:var(--tt)}
+.legend i{width:14px;height:14px;border-radius:4px;display:inline-block}
+</style></head><body>
+<h1>Monats-Kalender – 3 Vorschläge</h1>
+<div class="intro">Unter der Streak: der ganze Monat in Vierecken, gefüllt = trainiert. Welche Variante gefällt dir?</div>
+
+<div class="card">
+  <div class="tag">VARIANTE 1 · HEATMAP</div>
+  <div class="ct">Trainings-Monat</div>
+  <div class="dow"><span>M</span><span>D</span><span>M</span><span>D</span><span>F</span><span>S</span><span>S</span></div>
+  <div class="grid7" id="a"></div>
+</div>
+
+<div class="card">
+  <div class="tag">VARIANTE 2 · KALENDER MIT DATUM</div>
+  <div class="ct">Juli</div>
+  <div class="dow"><span>M</span><span>D</span><span>M</span><span>D</span><span>F</span><span>S</span><span>S</span></div>
+  <div class="grid7" id="b"></div>
+</div>
+
+<div class="card">
+  <div class="tag">VARIANTE 3 · INTENSITÄT</div>
+  <div class="ct">Trainings-Volumen</div>
+  <div class="dow"><span>M</span><span>D</span><span>M</span><span>D</span><span>F</span><span>S</span><span>S</span></div>
+  <div class="grid7" id="c"></div>
+  <div class="legend">weniger <i style="background:var(--track)"></i><i style="background:#1c3a63"></i><i style="background:#255186"></i><i style="background:#2f6bb2"></i><i style="background:#3E79C6"></i> mehr</div>
+</div>
+
+<script>
+// trainiert (Tag 1..31) + Intensität 0..3
+const trained={1:2,2:1,4:3,6:2,8:1,9:2,11:3,13:1,15:2,16:2,18:3,20:1,22:2,23:1,25:2,27:3,29:1,30:2};
+const days=31, startDow=2; // Monat startet Mittwoch (0=Mo)
+const shadeC=['var(--track)','#1c3a63','#255186','#3E79C6'];
+// A – binär (ohne Datums-Offset, kompakt)
+document.getElementById('a').innerHTML=Array.from({length:days},(_,i)=>{const d=i+1;return `<div class="cellA ${trained[d]?'on':''}"></div>`;}).join('');
+// B – echter Kalender mit Zahlen + Offset
+let bHtml=Array.from({length:startDow},()=>'<div class="cellB empty"></div>').join('');
+bHtml+=Array.from({length:days},(_,i)=>{const d=i+1;return `<div class="cellB ${trained[d]?'on':''}">${d}</div>`;}).join('');
+document.getElementById('b').innerHTML=bHtml;
+// C – Intensität
+document.getElementById('c').innerHTML=Array.from({length:days},(_,i)=>{const d=i+1,lvl=trained[d]||0;return `<div class="cellC" style="background:${shadeC[lvl]}"></div>`;}).join('');
+</script></body></html>

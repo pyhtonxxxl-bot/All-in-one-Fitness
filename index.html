@@ -267,8 +267,7 @@
     </div>
   </div>
 
-  <div class="section-label">Trends</div>
-  <div class="grid cols-2">
+  <div class="grid cols-2" style="margin-top:var(--gap);">
     <div class="card glass">
       <div class="card-title">Diese Woche · Training</div>
       <div id="weekChart"></div>
@@ -304,6 +303,8 @@
       <select class="input" id="setGlass" style="width:100%;"><option value="1">1 – dezent</option><option value="2">2 – ausgewogen</option><option value="3">3 – stark</option></select>
       <div class="field-label">Kalorien-Ziel</div><input class="input" id="setKcal" type="number" style="width:100%;" />
       <div class="field-label">Protein-Ziel (g)</div><input class="input" id="setProtein" type="number" style="width:100%;" />
+      <div class="field-label">Kohlenhydrate-Ziel (g)</div><input class="input" id="setCarbs" type="number" style="width:100%;" />
+      <div class="field-label">Fett-Ziel (g)</div><input class="input" id="setFat" type="number" style="width:100%;" />
       <div class="coach-actions"><button class="btn primary small" id="settingsSave">Speichern</button><button class="btn small" id="resetDemo">Demo zurücksetzen</button></div>
     </div>
   </div>
@@ -471,11 +472,14 @@ document.getElementById("regenBtn").addEventListener("click",()=>{ state.coachMe
 document.getElementById("goalAddBtn").addEventListener("click",()=>{ const i=document.getElementById("goalInput"); addGoal(i.value); i.value=""; });
 document.getElementById("goalInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ addGoal(e.target.value); e.target.value=""; } });
 document.getElementById("settingsBtn").addEventListener("click",()=>{ document.getElementById("apiKeyField").value=state.apiKey||"";
-  document.getElementById("setGlass").value=state.glass; document.getElementById("setKcal").value=state.calories.target; document.getElementById("setProtein").value=state.macros.protein.t; open("settingsOverlay"); });
+  document.getElementById("setGlass").value=state.glass; document.getElementById("setKcal").value=state.calories.target;
+  document.getElementById("setProtein").value=state.macros.protein.t; document.getElementById("setCarbs").value=state.macros.carbs.t; document.getElementById("setFat").value=state.macros.fat.t; open("settingsOverlay"); });
 document.getElementById("settingsClose").addEventListener("click",()=>close("settingsOverlay"));
 document.getElementById("settingsSave").addEventListener("click",()=>{ state.apiKey=document.getElementById("apiKeyField").value.trim();
   state.glass=Number(document.getElementById("setGlass").value)||2; state.calories.target=Number(document.getElementById("setKcal").value)||state.calories.target;
-  state.macros.protein.t=Number(document.getElementById("setProtein").value)||state.macros.protein.t; save(); applyGlass(); renderAll(); close("settingsOverlay"); });
+  state.macros.protein.t=Number(document.getElementById("setProtein").value)||state.macros.protein.t;
+  state.macros.carbs.t=Number(document.getElementById("setCarbs").value)||state.macros.carbs.t;
+  state.macros.fat.t=Number(document.getElementById("setFat").value)||state.macros.fat.t; save(); applyGlass(); renderAll(); close("settingsOverlay"); });
 document.getElementById("resetDemo").addEventListener("click",()=>{ if(confirm("Alle Daten auf Demo zurücksetzen?")){ state=seedState(); save(); applyGlass(); renderAll(); close("settingsOverlay"); } });
 document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{ if(e.target===o) o.classList.remove("open"); }));
 
