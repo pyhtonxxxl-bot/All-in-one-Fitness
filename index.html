@@ -6,124 +6,102 @@
 <title>Elite Coach — Fitness Dashboard</title>
 <style>
   /* ============================================================
-     ELITE COACH — Fitness Dashboard (Web)
-     Design: dunkel, dezente Glas-Optik, minimal, Apple-Stil.
-     Ein Akzent: Navy-Blau. Sonst monochrom.
-     Zum Umdesignen einfach die Variablen in :root ändern.
+     ELITE COACH — dunkel, Glas-Optik, minimal, Apple-Stil.
+     Ein Akzent: dunkles Blau (kein Lila).
+     Glas-Stärke per ?glass=1|2|3 (Standard 2) oder Body-Klasse.
      ============================================================ */
-
   :root {
-    /* Flächen */
     --bg:            #0A0A0C;
-    --card:          rgba(255, 255, 255, 0.05);
-    --card-2:        rgba(255, 255, 255, 0.07);
-    --hairline:      rgba(255, 255, 255, 0.08);
+    --hairline:      rgba(255, 255, 255, 0.09);
     --track:         rgba(255, 255, 255, 0.09);
 
-    /* Text (Apple-Graustufen) */
     --text-primary:   #F5F5F7;
     --text-secondary: #A1A1A6;
     --text-tertiary:  #6E6E73;
 
-    /* Ein Akzent: Navy-Blau */
-    --blue:    #3D5AD0;   /* Flächen, Balken, Punkte */
-    --blue-lo: #2A3C82;   /* tiefes Navy (Verlauf unten) */
-    --blue-hi: #4C6BE6;   /* helleres Navy (Verlauf oben) */
+    /* Dunkelblau – bewusst ohne Rot-/Lila-Anteil */
+    --blue:    #2A5EA0;   /* Flächen, Balken, Punkte */
+    --blue-lo: #123C72;   /* tiefes Navy (Verlauf unten) */
+    --blue-hi: #3E79C6;   /* helleres Blau (Verlauf oben / Icons) */
 
-    --radius: 20px;
-    --gap: 14px;
+    /* Glas (Standard = Level 2) */
+    --glass-blur: 24px; --glass-sat: 1.2;
+    --glass-bg: rgba(255,255,255,0.06);
+    --glass-border: rgba(255,255,255,0.10);
+    --glass-hi: 0.06;
 
+    --radius: 20px; --gap: 14px;
     --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --num:  -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
   }
+  body.glass-1 { --glass-blur:10px; --glass-sat:1.0; --glass-bg:rgba(255,255,255,0.035); --glass-border:rgba(255,255,255,0.06); --glass-hi:0.04; }
+  body.glass-3 { --glass-blur:48px; --glass-sat:1.6; --glass-bg:rgba(255,255,255,0.10); --glass-border:rgba(255,255,255,0.16); --glass-hi:0.10; }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
 
   body {
-    background: var(--bg);
-    color: var(--text-primary);
-    font-family: var(--font);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-    font-variant-numeric: tabular-nums;
-    min-height: 100dvh;
-    position: relative;
-    overflow-x: hidden;
+    background: var(--bg); color: var(--text-primary); font-family: var(--font);
+    -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums;
+    min-height: 100dvh; position: relative; overflow-x: hidden;
     padding: calc(env(safe-area-inset-top) + 28px) 18px 64px;
   }
-
-  /* sehr dezenter Navy-Schimmer + feiner Grain, damit Dunkel nicht flach wirkt */
+  /* dezente Navy-Blobs, damit das Glas etwas zum Mattieren hat */
   body::before {
-    content: ""; position: fixed; inset: 0; z-index: -2;
-    background: radial-gradient(70% 45% at 80% 0%, rgba(61, 90, 208, 0.12), transparent 70%);
-    filter: blur(30px);
+    content: ""; position: fixed; inset: -10%; z-index: -2;
+    background:
+      radial-gradient(38% 30% at 78% 6%,  rgba(42,110,180,0.32), transparent 60%),
+      radial-gradient(34% 30% at 10% 28%, rgba(20,64,124,0.24), transparent 60%),
+      radial-gradient(40% 34% at 90% 80%, rgba(30,76,146,0.22), transparent 60%),
+      radial-gradient(40% 34% at 12% 94%, rgba(46,84,156,0.16), transparent 60%);
+    filter: blur(50px); animation: drift 42s ease-in-out infinite alternate;
   }
   body::after {
     content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-    background-image: radial-gradient(rgba(255,255,255,0.012) 1px, transparent 1px);
-    background-size: 3px 3px;
+    background-image: radial-gradient(rgba(255,255,255,0.012) 1px, transparent 1px); background-size: 3px 3px;
   }
+  @keyframes drift { 0% { transform: translate3d(0,0,0) scale(1); } 100% { transform: translate3d(-2%, 2%, 0) scale(1.05); } }
 
   .wrap { max-width: 1040px; margin: 0 auto; }
 
-  /* ---------- Kopf ---------- */
+  /* Kopf */
   .topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
-  .dash-title { font-family: var(--num); font-size: 30px; font-weight: 700; letter-spacing: -0.03em; color: var(--text-primary); }
-  .dash-sub { color: var(--text-tertiary); font-size: 13px; margin-top: 5px; letter-spacing: 0.01em; }
-  .icon-btn {
-    background: var(--card); border: 1px solid var(--hairline); color: var(--text-secondary);
-    width: 40px; height: 40px; border-radius: 12px; cursor: pointer; font-size: 17px;
-    display: grid; place-items: center; transition: background .18s, color .18s; flex: 0 0 40px;
-    backdrop-filter: blur(20px);
-  }
-  .icon-btn:hover { background: var(--card-2); color: var(--text-primary); }
+  .dash-title { font-family: var(--num); font-size: 30px; font-weight: 700; letter-spacing: -0.03em; }
+  .dash-sub { color: var(--text-tertiary); font-size: 13px; margin-top: 5px; }
 
-  /* ---------- Karten (dezentes Glas) ---------- */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--hairline);
-    border-radius: var(--radius);
-    padding: 20px;
-    backdrop-filter: blur(20px) saturate(1.05);
-    -webkit-backdrop-filter: blur(20px) saturate(1.05);
+  /* Glas-Chassis */
+  .glass {
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,var(--glass-hi)), 0 10px 30px rgba(0,0,0,0.28);
   }
+  .icon-btn { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; cursor: pointer;
+    color: var(--text-secondary); font-size: 17px; flex: 0 0 40px; transition: color .18s, background .18s; }
+  .icon-btn:hover { color: var(--text-primary); }
+  .card { border-radius: var(--radius); padding: 20px; }
   .card + .card, .grid + .card, .card + .grid, .grid + .grid { margin-top: var(--gap); }
   .card-title { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 16px; }
-
   .grid { display: grid; gap: var(--gap); }
   @media (min-width: 760px) { .grid.cols-2 { grid-template-columns: 1fr 1fr; } }
 
-  /* ---------- Goal-Ticker (dezent) ---------- */
+  /* Ticker */
   .ticker-row { margin: 2px 0 16px; }
-  .goal-ticker {
-    display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 14px;
-    background: var(--card); border: 1px solid var(--hairline);
-    backdrop-filter: blur(20px); position: relative; overflow: hidden;
-  }
-  .goal-ticker-led-dot {
-    width: 7px; height: 7px; border-radius: 50%; background: var(--blue-hi);
-    box-shadow: 0 0 8px rgba(76,107,230,0.7); animation: pulse 1.8s ease-in-out infinite;
-  }
+  .goal-ticker { display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 14px; position: relative; overflow: hidden; }
+  .goal-ticker-led-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-hi); box-shadow: 0 0 8px rgba(62,121,198,0.7); animation: pulse 1.8s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(.82); } }
   .goal-ticker-label { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; color: var(--text-tertiary); }
   .goal-ticker-stage { flex: 1; height: 22px; position: relative; overflow: hidden; }
-  .goal-ticker-row {
-    position: absolute; inset: 0; display: flex; align-items: center; gap: 8px;
-    font-size: 13.5px; font-weight: 500; color: var(--text-primary); white-space: nowrap;
-  }
+  .goal-ticker-row { position: absolute; inset: 0; display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 500; color: var(--text-primary); white-space: nowrap; }
   .goal-ticker-status { width: 16px; flex: 0 0 16px; text-align: center; color: var(--text-tertiary); }
   .goal-ticker-text { flex: 1; overflow: hidden; text-overflow: ellipsis; }
-  .goal-ticker-meta {
-    font-size: 12px; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.02em;
-    padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,0.06);
-  }
+  .goal-ticker-meta { font-size: 12px; font-weight: 600; color: var(--text-secondary); padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,0.06); }
   .goal-ticker-row.is-leaving  { animation: ticker-leave .45s cubic-bezier(0.55,0,0.55,1) forwards; }
   .goal-ticker-row.is-entering { animation: ticker-enter .45s cubic-bezier(0.22,1,0.36,1) forwards; }
   @keyframes ticker-leave { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-100%); } }
   @keyframes ticker-enter { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
 
-  /* ---------- Ringe (Navy) ---------- */
+  /* Ringe */
   .rings { display: flex; justify-content: space-around; gap: 8px; flex-wrap: wrap; }
   .ring-block { display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; }
   .ring-svg { transform: rotate(-90deg); }
@@ -131,73 +109,70 @@
   .ring-fill { fill: none; stroke-linecap: round; transition: stroke-dashoffset 1s cubic-bezier(0.22,1,0.36,1); }
   .ring-wrap { position: relative; width: 118px; height: 118px; display: grid; place-items: center; }
   .ring-value { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
-  .ring-num { font-family: var(--num); font-size: 27px; font-weight: 600; letter-spacing: -0.02em; color: var(--text-primary); }
-  .ring-unit { font-size: 10.5px; color: var(--text-tertiary); margin-top: 2px; letter-spacing: 0.02em; }
+  .ring-num { font-family: var(--num); font-size: 27px; font-weight: 600; letter-spacing: -0.02em; }
+  .ring-unit { font-size: 10.5px; color: var(--text-tertiary); margin-top: 2px; }
   .ring-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
 
-  /* ---------- Coach ---------- */
+  /* Coach */
   .coach-head { display: flex; align-items: center; gap: 11px; margin-bottom: 12px; }
-  .coach-badge { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 17px;
-    background: rgba(61,90,208,0.18); border: 1px solid rgba(76,107,230,0.25); }
+  .coach-badge { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--blue-hi);
+    background: rgba(42,94,160,0.16); border: 1px solid rgba(62,121,198,0.28); }
+  .coach-badge svg { width: 19px; height: 19px; }
   .coach-msg { color: var(--text-secondary); line-height: 1.6; font-size: 15px; white-space: pre-wrap; }
-  .btn {
-    appearance: none; border: 1px solid var(--hairline); cursor: pointer; font-family: var(--font); font-weight: 600;
-    color: var(--text-primary); background: var(--card-2); padding: 10px 16px; border-radius: 12px;
-    transition: transform .12s, background .18s; font-size: 14px;
-  }
-  .btn:hover { background: rgba(255,255,255,0.10); }
+  .btn { appearance: none; border: 1px solid var(--hairline); cursor: pointer; font-family: var(--font); font-weight: 600;
+    color: var(--text-primary); background: rgba(255,255,255,0.07); padding: 10px 16px; border-radius: 12px; transition: transform .12s, background .18s; font-size: 14px; }
+  .btn:hover { background: rgba(255,255,255,0.11); }
   .btn:active { transform: scale(.98); }
   .btn.primary { background: var(--blue); border-color: transparent; color: #fff; }
-  .btn.primary:hover { background: #4863da; }
+  .btn.primary:hover { background: #316bb2; }
   .btn.small { padding: 8px 13px; font-size: 13px; }
   .coach-actions { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
 
-  /* ---------- Makros (tabellarisch, eine Farbe) ---------- */
+  /* Makros – tabellarisch, eine Farbe */
   .macros { display: grid; gap: 15px; }
   .macro { display: grid; grid-template-columns: 1fr auto; column-gap: 12px; row-gap: 7px; align-items: baseline; }
   .macro-name { font-size: 14px; color: var(--text-secondary); font-weight: 500; }
-  .macro-val { font-size: 13.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; text-align: right; letter-spacing: 0.01em; }
+  .macro-val { font-size: 13.5px; color: var(--text-secondary); font-variant-numeric: tabular-nums; text-align: right; }
   .macro-val b { color: var(--text-primary); font-weight: 600; }
   .macro-bar { grid-column: 1 / -1; height: 7px; border-radius: 999px; background: var(--track); overflow: hidden; }
   .macro-bar > i { display: block; height: 100%; border-radius: 999px; background: var(--blue); transition: width 1s cubic-bezier(0.22,1,0.36,1); }
 
-  /* ---------- Kacheln ---------- */
+  /* Kacheln */
   .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--gap); }
   @media (min-width: 560px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
-  .tile { background: var(--card); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 16px; backdrop-filter: blur(20px); }
+  .tile { border-radius: var(--radius); padding: 16px; }
   .tile-label { font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.04em; text-transform: uppercase; }
   .tile-val { font-family: var(--num); font-size: 23px; font-weight: 600; margin-top: 7px; letter-spacing: -0.02em; }
   .tile-unit { font-size: 12px; color: var(--text-tertiary); margin-left: 3px; font-weight: 400; }
   .tile-trend { font-size: 11.5px; margin-top: 5px; color: var(--text-tertiary); }
 
-  /* ---------- Training ---------- */
+  /* Training */
   .train-row { display: flex; align-items: center; gap: 14px; }
-  .train-ico { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-size: 21px; background: var(--card-2); border: 1px solid var(--hairline); }
+  .train-ico { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; color: var(--blue-hi);
+    background: rgba(255,255,255,0.05); border: 1px solid var(--hairline); }
+  .train-ico svg { width: 23px; height: 23px; }
   .train-stats { display: flex; gap: 22px; margin-top: 14px; flex-wrap: wrap; }
   .train-stat b { font-family: var(--num); font-size: 17px; font-weight: 600; display: block; }
   .train-stat span { font-size: 11.5px; color: var(--text-tertiary); }
 
-  /* ---------- Streak ---------- */
+  /* Streak */
   .streak-row { display: flex; align-items: center; gap: 16px; }
-  .streak-flame { font-size: 34px; filter: grayscale(0.15); }
+  .streak-ico { color: var(--blue-hi); display: grid; place-items: center; }
+  .streak-ico svg { width: 30px; height: 30px; }
   .streak-num { font-family: var(--num); font-size: 38px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
   .streak-cal { display: flex; gap: 5px; margin-top: 16px; }
   .streak-dot { width: 18px; height: 18px; border-radius: 6px; background: var(--track); }
   .streak-dot.on { background: var(--blue); }
 
-  /* ---------- Goals ---------- */
+  /* Goals */
   .goal-add { display: flex; gap: 8px; margin-bottom: 14px; }
-  .input {
-    flex: 1; background: rgba(0,0,0,0.25); border: 1px solid var(--hairline); color: var(--text-primary);
-    padding: 11px 13px; border-radius: 11px; font-family: var(--font); font-size: 14px; outline: none;
-  }
-  .input:focus { border-color: rgba(76,107,230,0.6); }
+  .input { flex: 1; background: rgba(0,0,0,0.25); border: 1px solid var(--hairline); color: var(--text-primary);
+    padding: 11px 13px; border-radius: 11px; font-family: var(--font); font-size: 14px; outline: none; }
+  .input:focus { border-color: rgba(62,121,198,0.6); }
   .goal-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--hairline); }
   .goal-item:first-child { border-top: none; }
-  .goal-check {
-    width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid var(--text-tertiary);
-    display: grid; place-items: center; cursor: pointer; flex: 0 0 22px; transition: all .15s; font-size: 13px; color: transparent;
-  }
+  .goal-check { width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid var(--text-tertiary); display: grid; place-items: center;
+    cursor: pointer; flex: 0 0 22px; transition: all .15s; font-size: 13px; color: transparent; }
   .goal-check.done { background: var(--blue); border-color: var(--blue); color: #fff; }
   .goal-txt { flex: 1; font-size: 14.5px; }
   .goal-txt.done { color: var(--text-tertiary); text-decoration: line-through; }
@@ -205,45 +180,37 @@
   .goal-del:hover { color: var(--text-secondary); opacity: 1; }
   .empty-hint { color: var(--text-tertiary); font-size: 13.5px; padding: 6px 0; }
 
-  /* ---------- Modals ---------- */
-  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(8px); z-index: 40; display: none; align-items: flex-end; justify-content: center; }
+  /* Modals */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); z-index: 40; display: none; align-items: flex-end; justify-content: center; }
   .overlay.open { display: flex; }
   @media (min-width: 640px) { .overlay { align-items: center; } }
-  .sheet {
-    width: 100%; max-width: 520px; max-height: 82dvh; background: #131316; border: 1px solid var(--hairline);
-    border-radius: 22px 22px 0 0; padding: 20px; display: flex; flex-direction: column;
-  }
+  .sheet { width: 100%; max-width: 520px; max-height: 82dvh; border-radius: 22px 22px 0 0; padding: 20px; display: flex; flex-direction: column;
+    background: rgba(24,24,28,0.75); }
   @media (min-width: 640px) { .sheet { border-radius: 22px; } }
   .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
   .sheet-head h3 { font-size: 17px; font-weight: 600; }
   .chat-log { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 4px 2px; }
   .msg { max-width: 85%; padding: 10px 13px; border-radius: 15px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
   .msg.user { align-self: flex-end; background: var(--blue); color: #fff; border-bottom-right-radius: 5px; }
-  .msg.coach { align-self: flex-start; background: var(--card-2); color: var(--text-primary); border-bottom-left-radius: 5px; }
+  .msg.coach { align-self: flex-start; background: rgba(255,255,255,0.08); color: var(--text-primary); border-bottom-left-radius: 5px; }
   .msg.typing { color: var(--text-tertiary); }
   .chat-input { display: flex; gap: 8px; margin-top: 12px; }
-  .field-label { font-size: 12px; color: var(--text-tertiary); margin: 14px 0 6px; letter-spacing: 0.02em; }
+  .field-label { font-size: 12px; color: var(--text-tertiary); margin: 14px 0 6px; }
   .note { font-size: 12px; color: var(--text-tertiary); line-height: 1.55; margin-top: 10px; }
   .note b { color: var(--text-secondary); }
-
   .section-label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); margin: 28px 4px 10px; }
-
   @media (max-width: 480px) { .dash-title { font-size: 25px; } }
 </style>
 </head>
 <body>
 <div class="wrap">
-
   <div class="topbar">
-    <div>
-      <h1 class="dash-title">Elite Coach</h1>
-      <div class="dash-sub" id="dateLine">—</div>
-    </div>
-    <button class="icon-btn" id="settingsBtn" title="Einstellungen">⚙</button>
+    <div><h1 class="dash-title">Elite Coach</h1><div class="dash-sub" id="dateLine">—</div></div>
+    <button class="icon-btn glass" id="settingsBtn" title="Einstellungen">⚙</button>
   </div>
 
   <div class="ticker-row">
-    <div class="goal-ticker" id="goalTicker" aria-live="polite" aria-atomic="true">
+    <div class="goal-ticker glass" id="goalTicker" aria-live="polite" aria-atomic="true">
       <span class="goal-ticker-led-dot"></span>
       <div class="goal-ticker-label">ZIELE</div>
       <div class="goal-ticker-stage" id="goalTickerStage">
@@ -253,10 +220,10 @@
     </div>
   </div>
 
-  <div class="card"><div class="rings" id="rings"></div></div>
+  <div class="card glass"><div class="rings" id="rings"></div></div>
 
-  <div class="card">
-    <div class="coach-head"><div class="coach-badge">🧠</div><div class="card-title" style="margin:0;">Dein Coach heute</div></div>
+  <div class="card glass">
+    <div class="coach-head"><div class="coach-badge" id="coachBadge"></div><div class="card-title" style="margin:0;">Dein Coach heute</div></div>
     <div class="coach-msg" id="coachMsg">…</div>
     <div class="coach-actions">
       <button class="btn primary" id="chatBtn">Mit Coach chatten</button>
@@ -265,38 +232,30 @@
   </div>
 
   <div class="grid cols-2">
-    <div class="card">
-      <div class="card-title">Nährwerte</div>
-      <div class="macros" id="macros"></div>
-    </div>
-    <div class="card">
+    <div class="card glass"><div class="card-title">Nährwerte</div><div class="macros" id="macros"></div></div>
+    <div class="card glass">
       <div class="card-title">Letztes Training</div>
       <div class="train-row">
-        <div class="train-ico" id="trainIco">🏋️</div>
-        <div>
-          <div style="font-weight:600;font-size:15px;" id="trainType">—</div>
-          <div style="font-size:12.5px;color:var(--text-tertiary);" id="trainWhen">—</div>
-        </div>
+        <div class="train-ico" id="trainIco"></div>
+        <div><div style="font-weight:600;font-size:15px;" id="trainType">—</div>
+          <div style="font-size:12.5px;color:var(--text-tertiary);" id="trainWhen">—</div></div>
       </div>
       <div class="train-stats" id="trainStats"></div>
     </div>
   </div>
 
   <div class="grid cols-2">
-    <div class="card">
+    <div class="card glass">
       <div class="card-title">Streak</div>
       <div class="streak-row">
-        <div class="streak-flame">🔥</div>
+        <div class="streak-ico" id="streakIco"></div>
         <div><span class="streak-num" id="streakNum">0</span><span style="color:var(--text-tertiary);font-size:14px;"> Tage</span></div>
       </div>
       <div class="streak-cal" id="streakCal"></div>
     </div>
-    <div class="card">
+    <div class="card glass">
       <div class="card-title">Ziele heute</div>
-      <div class="goal-add">
-        <input class="input" id="goalInput" placeholder="Neues Ziel…" maxlength="80" />
-        <button class="btn small" id="goalAddBtn">Hinzufügen</button>
-      </div>
+      <div class="goal-add"><input class="input" id="goalInput" placeholder="Neues Ziel…" maxlength="80" /><button class="btn small" id="goalAddBtn">Hinzufügen</button></div>
       <div id="goalList"></div>
     </div>
   </div>
@@ -306,240 +265,152 @@
 </div>
 
 <div class="overlay" id="chatOverlay">
-  <div class="sheet">
+  <div class="sheet glass">
     <div class="sheet-head"><h3>Coach-Chat</h3><button class="icon-btn" id="chatClose">✕</button></div>
     <div class="chat-log" id="chatLog"></div>
-    <div class="chat-input">
-      <input class="input" id="chatField" placeholder="Frag deinen Coach…" />
-      <button class="btn primary small" id="chatSend">Senden</button>
-    </div>
+    <div class="chat-input"><input class="input" id="chatField" placeholder="Frag deinen Coach…" /><button class="btn primary small" id="chatSend">Senden</button></div>
   </div>
 </div>
 
 <div class="overlay" id="settingsOverlay">
-  <div class="sheet">
+  <div class="sheet glass">
     <div class="sheet-head"><h3>Einstellungen</h3><button class="icon-btn" id="settingsClose">✕</button></div>
     <div style="overflow-y:auto;">
       <div class="field-label">Claude API-Key (optional – für den echten KI-Coach)</div>
       <input class="input" id="apiKeyField" type="password" placeholder="sk-ant-…" style="width:100%;" />
-      <div class="note">Ohne Key antwortet der Coach mit Demo-Logik aus deinen Daten. Mit Key ruft er die <b>Anthropic Claude API</b> direkt auf. <b>Nur für lokale/private Nutzung</b> – der Key liegt im Browser.</div>
-      <div class="field-label">Kalorien-Ziel</div>
-      <input class="input" id="setKcal" type="number" style="width:100%;" />
-      <div class="field-label">Protein-Ziel (g)</div>
-      <input class="input" id="setProtein" type="number" style="width:100%;" />
-      <div class="coach-actions">
-        <button class="btn primary small" id="settingsSave">Speichern</button>
-        <button class="btn small" id="resetDemo">Demo-Daten zurücksetzen</button>
-      </div>
+      <div class="note">Ohne Key antwortet der Coach mit Demo-Logik. Mit Key ruft er die <b>Anthropic Claude API</b> direkt auf. <b>Nur für lokale/private Nutzung.</b></div>
+      <div class="field-label">Glas-Stärke</div>
+      <select class="input" id="setGlass" style="width:100%;"><option value="1">1 – dezent</option><option value="2">2 – ausgewogen</option><option value="3">3 – stark</option></select>
+      <div class="field-label">Kalorien-Ziel</div><input class="input" id="setKcal" type="number" style="width:100%;" />
+      <div class="field-label">Protein-Ziel (g)</div><input class="input" id="setProtein" type="number" style="width:100%;" />
+      <div class="coach-actions"><button class="btn primary small" id="settingsSave">Speichern</button><button class="btn small" id="resetDemo">Demo zurücksetzen</button></div>
     </div>
   </div>
 </div>
 
 <script>
-const KEY = "elitecoach:state:v2";
+const KEY = "elitecoach:state:v3";
 const MODEL = "claude-sonnet-5";
-function todayISO() { return new Date().toISOString().slice(0,10); }
-function uid() { return Math.random().toString(36).slice(2, 9); }
+const todayISO = () => new Date().toISOString().slice(0,10);
+const uid = () => Math.random().toString(36).slice(2, 9);
+
+/* Saubere Linien-Icons (SF-Symbol-Stil, einfarbig) */
+const svg = i => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+i+'</svg>';
+const ICONS = {
+  flame:    svg('<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>'),
+  bolt:     svg('<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/>'),
+  trophy:   svg('<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.9 18.8 7 20.2 7 22"/><path d="M14 14.7V17c0 .6.5 1 1 1.2C16.1 18.8 17 20.2 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>'),
+  target:   svg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6"/>'),
+  activity: svg('<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>'),
+  dumbbell: svg('<path d="M6.5 6.5v11"/><path d="M4 8.5v7"/><path d="M17.5 6.5v11"/><path d="M20 8.5v7"/><path d="M6.5 12h11"/>'),
+  heart:    svg('<path d="M19 14c1.5-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z"/><path d="M3.5 12H9l1-2 2 4 1.5-3h6.2"/>'),
+  brain:    svg('<path d="M12 5a3 3 0 0 0-6 .5A2.5 2.5 0 0 0 4 8a2.5 2.5 0 0 0 1 4 2.5 2.5 0 0 0 4 2 3 3 0 0 0 3 0M12 5a3 3 0 0 1 6 .5A2.5 2.5 0 0 1 20 8a2.5 2.5 0 0 1-1 4 2.5 2.5 0 0 1-4 2 3 3 0 0 1-3 0M12 5v14"/>')
+};
 
 function seedState() {
   return {
-    date: todayISO(),
-    sleep:    { score: 82, hours: 7.4, deep: 22, rem: 24 },
-    recovery: { score: 64, hrv: 68, rhr: 52 },
-    calories: { consumed: 1840, target: 2650 },
-    macros: { protein:{v:118,t:175}, carbs:{v:190,t:280}, fat:{v:58,t:80} },
-    training: { type:"Krafttraining", emoji:"🏋️", when:"Heute, 07:20", duration:62, kcal:480, avgHr:128 },
-    metrics: { steps:8640, activeKcal:640, vo2max:48.2, weight:81.4 },
-    streak: { count:12, days:[1,1,0,1,1,1,1,0,1,1,1,1,1,1] },
-    coachMessage: "",
-    goals: [
-      { id:uid(), text:"Ernährung in Yazio loggen", done:true },
-      { id:uid(), text:"Proteinziel erreichen (175 g)", done:false },
-      { id:uid(), text:"Zone-2 Cardio, 30 min", done:false },
-      { id:uid(), text:"Vor 23:00 im Bett", done:false }
-    ],
-    chat: [], apiKey: ""
+    date: todayISO(), glass: 2, streakIcon: "flame", trainingIcon: "dumbbell",
+    sleep:{score:82,hours:7.4,deep:22,rem:24}, recovery:{score:64,hrv:68,rhr:52},
+    calories:{consumed:1840,target:2650}, macros:{protein:{v:118,t:175},carbs:{v:190,t:280},fat:{v:58,t:80}},
+    training:{type:"Krafttraining",when:"Heute, 07:20",duration:62,kcal:480,avgHr:128},
+    metrics:{steps:8640,activeKcal:640,vo2max:48.2,weight:81.4},
+    streak:{count:12,days:[1,1,0,1,1,1,1,0,1,1,1,1,1,1]}, coachMessage:"",
+    goals:[{id:uid(),text:"Ernährung in Yazio loggen",done:true},{id:uid(),text:"Proteinziel erreichen (175 g)",done:false},
+      {id:uid(),text:"Zone-2 Cardio, 30 min",done:false},{id:uid(),text:"Vor 23:00 im Bett",done:false}],
+    chat:[], apiKey:""
   };
 }
 let state = load();
-function load() {
-  try { const raw = localStorage.getItem(KEY); if (!raw) return seedState();
-    const s = JSON.parse(raw); if (s.date !== todayISO()) s.date = todayISO(); return s;
-  } catch { return seedState(); }
-}
-function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return seedState();
+  const s=JSON.parse(raw); if(s.date!==todayISO()) s.date=todayISO();
+  s.glass=s.glass||2; s.streakIcon=s.streakIcon||"flame"; s.trainingIcon=s.trainingIcon||"dumbbell"; return s;
+} catch { return seedState(); } }
+function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-/* Ringe – einheitlich Navy (Verlauf hell→tief) */
-function ringSVG(percent, gid) {
-  const size=118, sw=9, r=(size-sw)/2, c=2*Math.PI*r, off=c*(1-Math.min(Math.max(percent,0),1));
-  return `<svg class="ring-svg" width="${size}" height="${size}">
-    <defs><linearGradient id="${gid}" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="var(--blue-hi)"/><stop offset="100%" stop-color="var(--blue-lo)"/>
-    </linearGradient></defs>
-    <circle class="ring-track" cx="${size/2}" cy="${size/2}" r="${r}" stroke-width="${sw}"></circle>
-    <circle class="ring-fill" cx="${size/2}" cy="${size/2}" r="${r}" stroke="url(#${gid})" stroke-width="${sw}"
-      stroke-dasharray="${c}" stroke-dashoffset="${off}"></circle></svg>`;
-}
-function renderRings() {
-  const kcalLeft = Math.max(0, Math.round(state.calories.target - state.calories.consumed));
-  const rings = [
-    { key:"sleep",    label:"Schlaf",   pct: state.sleep.score/100,    num: state.sleep.score,   unit:"Score" },
-    { key:"recovery", label:"Erholung", pct: state.recovery.score/100, num: state.recovery.score+"%", unit:"Recovery" },
-    { key:"calories", label:"Kalorien", pct: state.calories.consumed/state.calories.target, num: kcalLeft, unit:"kcal übrig" }
-  ];
-  document.getElementById("rings").innerHTML = rings.map(r => `
-    <div class="ring-block" data-ring="${r.key}">
-      <div class="ring-wrap">${ringSVG(r.pct, "g_"+r.key)}
-        <div class="ring-value"><div><div class="ring-num">${r.num}</div><div class="ring-unit">${r.unit}</div></div></div>
-      </div><div class="ring-label">${r.label}</div>
-    </div>`).join("");
-  document.querySelectorAll(".ring-block").forEach(el => el.addEventListener("click", () => ringDetail(el.dataset.ring)));
-}
-function ringDetail(key){
-  const d={ sleep:`Schlaf-Score ${state.sleep.score}/100\nDauer ${state.sleep.hours} h · Tief ${state.sleep.deep}% · REM ${state.sleep.rem}%`,
-    recovery:`Erholung ${state.recovery.score}%\nHRV ${state.recovery.hrv} ms · Ruhepuls ${state.recovery.rhr} bpm`,
-    calories:`${state.calories.consumed} / ${state.calories.target} kcal\nNoch ${Math.max(0,state.calories.target-state.calories.consumed)} kcal` }[key];
-  alert(d);
-}
+function applyGlass(){ document.body.classList.remove("glass-1","glass-2","glass-3"); document.body.classList.add("glass-"+state.glass); }
 
-/* Makros – tabellarisch, alle in Navy */
-function renderMacros() {
-  const defs = [
-    { name:"Kalorien", v: state.calories.consumed, t: state.calories.target, unit:"kcal" },
-    { name:"Protein",  v: state.macros.protein.v,  t: state.macros.protein.t, unit:"g" },
-    { name:"Kohlenhydrate", v: state.macros.carbs.v, t: state.macros.carbs.t, unit:"g" },
-    { name:"Fette",    v: state.macros.fat.v,      t: state.macros.fat.t, unit:"g" }
-  ];
-  document.getElementById("macros").innerHTML = defs.map(m => {
-    const pct = Math.min(100, Math.round(m.v/m.t*100));
-    return `<div class="macro">
-      <span class="macro-name">${m.name}</span>
-      <span class="macro-val"><b>${m.v}</b> / ${m.t} ${m.unit}</span>
-      <div class="macro-bar"><i style="width:${pct}%"></i></div>
-    </div>`;
-  }).join("");
-}
-function renderTraining() {
-  const t = state.training;
-  document.getElementById("trainIco").textContent = t.emoji;
-  document.getElementById("trainType").textContent = t.type;
-  document.getElementById("trainWhen").textContent = t.when;
-  document.getElementById("trainStats").innerHTML =
-    `<div class="train-stat"><b>${t.duration}</b><span>Minuten</span></div>
-     <div class="train-stat"><b>${t.kcal}</b><span>kcal</span></div>
-     <div class="train-stat"><b>${t.avgHr}</b><span>Ø Puls</span></div>`;
-}
-function renderStreak() {
-  document.getElementById("streakNum").textContent = state.streak.count;
-  document.getElementById("streakCal").innerHTML = state.streak.days.map(d => `<div class="streak-dot ${d?"on":""}"></div>`).join("");
-}
-function renderTiles() {
-  const m = state.metrics;
-  const tiles = [
-    { label:"Schritte", val:m.steps.toLocaleString("de-DE"), unit:"", trend:"" },
-    { label:"Aktive kcal", val:m.activeKcal, unit:"kcal", trend:"" },
-    { label:"VO₂max", val:m.vo2max, unit:"", trend:"↗ Ausdauer" },
-    { label:"Gewicht", val:m.weight, unit:"kg", trend:"↘ −0,6 kg/30T" }
-  ];
-  document.getElementById("tiles").innerHTML = tiles.map(t => `
-    <div class="tile"><div class="tile-label">${t.label}</div>
-      <div class="tile-val">${t.val}<span class="tile-unit">${t.unit}</span></div>
-      <div class="tile-trend">${t.trend}</div></div>`).join("");
-}
+function ringSVG(pct, gid){ const s=118,w=9,r=(s-w)/2,c=2*Math.PI*r,o=c*(1-Math.min(Math.max(pct,0),1));
+  return `<svg class="ring-svg" width="${s}" height="${s}"><defs><linearGradient id="${gid}" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="var(--blue-hi)"/><stop offset="100%" stop-color="var(--blue-lo)"/></linearGradient></defs>
+    <circle class="ring-track" cx="${s/2}" cy="${s/2}" r="${r}" stroke-width="${w}"></circle>
+    <circle class="ring-fill" cx="${s/2}" cy="${s/2}" r="${r}" stroke="url(#${gid})" stroke-width="${w}" stroke-dasharray="${c}" stroke-dashoffset="${o}"></circle></svg>`; }
+function renderRings(){ const kL=Math.max(0,Math.round(state.calories.target-state.calories.consumed));
+  const R=[{key:"sleep",label:"Schlaf",pct:state.sleep.score/100,num:state.sleep.score,unit:"Score"},
+    {key:"recovery",label:"Erholung",pct:state.recovery.score/100,num:state.recovery.score+"%",unit:"Recovery"},
+    {key:"calories",label:"Kalorien",pct:state.calories.consumed/state.calories.target,num:kL,unit:"kcal übrig"}];
+  document.getElementById("rings").innerHTML=R.map(r=>`<div class="ring-block" data-ring="${r.key}"><div class="ring-wrap">${ringSVG(r.pct,"g_"+r.key)}
+    <div class="ring-value"><div><div class="ring-num">${r.num}</div><div class="ring-unit">${r.unit}</div></div></div></div><div class="ring-label">${r.label}</div></div>`).join("");
+  document.querySelectorAll(".ring-block").forEach(el=>el.addEventListener("click",()=>ringDetail(el.dataset.ring))); }
+function ringDetail(k){ const d={sleep:`Schlaf-Score ${state.sleep.score}/100\nDauer ${state.sleep.hours} h · Tief ${state.sleep.deep}% · REM ${state.sleep.rem}%`,
+  recovery:`Erholung ${state.recovery.score}%\nHRV ${state.recovery.hrv} ms · Ruhepuls ${state.recovery.rhr} bpm`,
+  calories:`${state.calories.consumed} / ${state.calories.target} kcal\nNoch ${Math.max(0,state.calories.target-state.calories.consumed)} kcal`}[k]; alert(d); }
 
-/* Goals */
-function renderGoals() {
-  const list = document.getElementById("goalList");
-  if (!state.goals.length) list.innerHTML = `<div class="empty-hint">Noch keine Ziele – füg oben eins hinzu.</div>`;
-  else {
-    list.innerHTML = state.goals.map(g => `
-      <div class="goal-item" data-id="${g.id}">
-        <div class="goal-check ${g.done?"done":""}">✓</div>
-        <div class="goal-txt ${g.done?"done":""}">${escapeHtml(g.text)}</div>
-        <button class="goal-del" title="Löschen">×</button>
-      </div>`).join("");
-    list.querySelectorAll(".goal-item").forEach(item => {
-      const id = item.dataset.id;
-      item.querySelector(".goal-check").addEventListener("click", () => toggleGoal(id));
-      item.querySelector(".goal-del").addEventListener("click", () => deleteGoal(id));
-    });
-  }
-  save(); window.dispatchEvent(new CustomEvent("goals-changed"));
-}
+function renderMacros(){ const D=[{name:"Kalorien",v:state.calories.consumed,t:state.calories.target,u:"kcal"},
+  {name:"Protein",v:state.macros.protein.v,t:state.macros.protein.t,u:"g"},
+  {name:"Kohlenhydrate",v:state.macros.carbs.v,t:state.macros.carbs.t,u:"g"},
+  {name:"Fette",v:state.macros.fat.v,t:state.macros.fat.t,u:"g"}];
+  document.getElementById("macros").innerHTML=D.map(m=>{ const p=Math.min(100,Math.round(m.v/m.t*100));
+    return `<div class="macro"><span class="macro-name">${m.name}</span><span class="macro-val"><b>${m.v}</b> / ${m.t} ${m.u}</span><div class="macro-bar"><i style="width:${p}%"></i></div></div>`; }).join(""); }
+function renderTraining(){ const t=state.training;
+  document.getElementById("trainIco").innerHTML=ICONS[state.trainingIcon]||ICONS.dumbbell;
+  document.getElementById("trainType").textContent=t.type; document.getElementById("trainWhen").textContent=t.when;
+  document.getElementById("trainStats").innerHTML=`<div class="train-stat"><b>${t.duration}</b><span>Minuten</span></div><div class="train-stat"><b>${t.kcal}</b><span>kcal</span></div><div class="train-stat"><b>${t.avgHr}</b><span>Ø Puls</span></div>`; }
+function renderStreak(){ document.getElementById("streakIco").innerHTML=ICONS[state.streakIcon]||ICONS.flame;
+  document.getElementById("streakNum").textContent=state.streak.count;
+  document.getElementById("streakCal").innerHTML=state.streak.days.map(d=>`<div class="streak-dot ${d?"on":""}"></div>`).join(""); }
+function renderTiles(){ const m=state.metrics; const T=[{l:"Schritte",v:m.steps.toLocaleString("de-DE"),u:"",tr:""},
+  {l:"Aktive kcal",v:m.activeKcal,u:"kcal",tr:""},{l:"VO₂max",v:m.vo2max,u:"",tr:"↗ Ausdauer"},{l:"Gewicht",v:m.weight,u:"kg",tr:"↘ −0,6 kg/30T"}];
+  document.getElementById("tiles").innerHTML=T.map(t=>`<div class="tile glass"><div class="tile-label">${t.l}</div><div class="tile-val">${t.v}<span class="tile-unit">${t.u}</span></div><div class="tile-trend">${t.tr}</div></div>`).join(""); }
+
+function renderGoals(){ const list=document.getElementById("goalList");
+  if(!state.goals.length) list.innerHTML=`<div class="empty-hint">Noch keine Ziele – füg oben eins hinzu.</div>`;
+  else{ list.innerHTML=state.goals.map(g=>`<div class="goal-item" data-id="${g.id}"><div class="goal-check ${g.done?"done":""}">✓</div><div class="goal-txt ${g.done?"done":""}">${esc(g.text)}</div><button class="goal-del" title="Löschen">×</button></div>`).join("");
+    list.querySelectorAll(".goal-item").forEach(it=>{ const id=it.dataset.id; it.querySelector(".goal-check").addEventListener("click",()=>toggleGoal(id)); it.querySelector(".goal-del").addEventListener("click",()=>deleteGoal(id)); }); }
+  save(); window.dispatchEvent(new CustomEvent("goals-changed")); }
 function addGoal(t){ t=t.trim(); if(!t) return; state.goals.push({id:uid(),text:t,done:false}); renderGoals(); }
 function toggleGoal(id){ const g=state.goals.find(x=>x.id===id); if(g) g.done=!g.done; renderGoals(); }
 function deleteGoal(id){ state.goals=state.goals.filter(x=>x.id!==id); renderGoals(); }
 
-/* Ticker */
-const Ticker = (() => {
-  const stage = document.getElementById("goalTickerStage"), meta = document.getElementById("goalTickerMeta");
-  let cycleIdx=0, first=true;
-  function build(){ const g=state.goals, total=g.length, done=g.filter(x=>x.done).length;
-    let items; if(!total) items=[{status:"empty",text:"Keine Ziele heute – füg eins hinzu."}];
-    else if(done===total) items=[{status:"done",text:"✓ Alle Ziele erledigt – starker Tag."}];
-    else items=g.filter(x=>!x.done).map(x=>({status:"pending",text:x.text}));
-    return {items,done,total}; }
-  function glyph(s){ return s==="done"?"✓":s==="pending"?"○":"·"; }
-  function tick(){ const {items,done,total}=build(); if(cycleIdx>=items.length) cycleIdx=0;
-    const it=items[cycleIdx]; meta.textContent=`${done}/${total}`;
-    const old=stage.querySelector(".goal-ticker-row");
-    const row=document.createElement("div"); row.className="goal-ticker-row"+(first?"":" is-entering");
-    row.innerHTML=`<span class="goal-ticker-status">${glyph(it.status)}</span><span class="goal-ticker-text">${escapeHtml(it.text)}</span>`;
-    if(old&&!first){ old.classList.add("is-leaving"); setTimeout(()=>old.remove(),460); } else if(old) old.remove();
-    stage.appendChild(row); cycleIdx++; first=false; }
-  function start(){ tick(); setInterval(tick,5000); }
-  window.addEventListener("goals-changed",()=>{ cycleIdx=0; tick(); });
-  return { start };
-})();
+const Ticker=(()=>{ const stage=document.getElementById("goalTickerStage"),meta=document.getElementById("goalTickerMeta"); let i=0,first=true;
+  const build=()=>{ const g=state.goals,total=g.length,done=g.filter(x=>x.done).length; let items;
+    if(!total) items=[{s:"empty",t:"Keine Ziele heute – füg eins hinzu."}]; else if(done===total) items=[{s:"done",t:"✓ Alle Ziele erledigt – starker Tag."}];
+    else items=g.filter(x=>!x.done).map(x=>({s:"pending",t:x.text})); return{items,done,total}; };
+  const gl=s=>s==="done"?"✓":s==="pending"?"○":"·";
+  const tick=()=>{ const{items,done,total}=build(); if(i>=items.length) i=0; const it=items[i]; meta.textContent=`${done}/${total}`;
+    const old=stage.querySelector(".goal-ticker-row"),row=document.createElement("div"); row.className="goal-ticker-row"+(first?"":" is-entering");
+    row.innerHTML=`<span class="goal-ticker-status">${gl(it.s)}</span><span class="goal-ticker-text">${esc(it.t)}</span>`;
+    if(old&&!first){ old.classList.add("is-leaving"); setTimeout(()=>old.remove(),460); } else if(old) old.remove(); stage.appendChild(row); i++; first=false; };
+  window.addEventListener("goals-changed",()=>{ i=0; tick(); }); return { start:()=>{ tick(); setInterval(tick,5000); } }; })();
 
-/* Coach */
-function coachContext(){ const kL=state.calories.target-state.calories.consumed, pL=state.macros.protein.t-state.macros.protein.v;
-  return [`Datum: ${state.date}`,`Schlaf-Score: ${state.sleep.score}/100 (${state.sleep.hours} h)`,
-    `Erholung: ${state.recovery.score}% (HRV ${state.recovery.hrv}, RHR ${state.recovery.rhr})`,
-    `Kalorien: ${state.calories.consumed}/${state.calories.target} (noch ${kL})`,
-    `Protein: ${state.macros.protein.v}/${state.macros.protein.t} g (noch ${pL})`,
-    `Training: ${state.training.type}, ${state.training.duration} min`, `Streak: ${state.streak.count} Tage`,
+function coachContext(){ const kL=state.calories.target-state.calories.consumed,pL=state.macros.protein.t-state.macros.protein.v;
+  return [`Datum: ${state.date}`,`Schlaf: ${state.sleep.score}/100 (${state.sleep.hours} h)`,`Erholung: ${state.recovery.score}% (HRV ${state.recovery.hrv}, RHR ${state.recovery.rhr})`,
+    `Kalorien: ${state.calories.consumed}/${state.calories.target} (noch ${kL})`,`Protein: ${state.macros.protein.v}/${state.macros.protein.t} g (noch ${pL})`,
+    `Training: ${state.training.type}, ${state.training.duration} min`,`Streak: ${state.streak.count} Tage`,
     `Offene Ziele: ${state.goals.filter(g=>!g.done).map(g=>g.text).join("; ")||"keine"}`].join("\n"); }
-const SYSTEM_PROMPT = `Du bist der beste Personal Coach der Welt: direkt, ehrlich, datenbasiert, keine Floskeln. Du duzt den Nutzer, antwortest kurz und präzise mit konkreten Zahlen. Ziel-Fokus: Muskelaufbau (Protein ~2 g/kg, leichter Kalorienüberschuss an Trainingstagen, progressive Überlastung) und Ausdauer (Zone-2, VO2max). Passe Empfehlungen an den heutigen Erholungsscore an.`;
-async function askCoach(userText){
-  if(!state.apiKey) return demoReply(userText);
-  const messages = state.chat.slice(-8).map(m=>({role:m.role==="coach"?"assistant":"user",content:m.text}));
-  messages.push({role:"user",content:userText});
-  const res = await fetch("https://api.anthropic.com/v1/messages",{ method:"POST",
-    headers:{ "content-type":"application/json","x-api-key":state.apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true" },
-    body: JSON.stringify({ model:MODEL, max_tokens:700, system:SYSTEM_PROMPT+"\n\nKONTEXT:\n"+coachContext(), messages }) });
-  if(!res.ok){ throw new Error("API "+res.status+": "+(await res.text()).slice(0,180)); }
-  const data = await res.json();
-  return (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("")||"…";
-}
-function demoReply(){ const pL=state.macros.protein.t-state.macros.protein.v, kL=state.calories.target-state.calories.consumed, r=state.recovery.score, b=[];
-  if(r<=33) b.push(`Recovery ${r}% – heute nur Zone 2 statt Intervalle.`);
-  else if(r<=66) b.push(`Recovery ${r}% – moderates Workout ok, Intensität moderat halten.`);
-  else b.push(`Recovery ${r}% – top, heute Vollgas (Intervalle/schwere Sätze).`);
-  if(pL>0) b.push(`Dir fehlen noch ${pL} g Protein – z. B. 200 g Magerquark (~24 g) + Whey (~25 g).`);
-  if(kL>0) b.push(`Noch ${kL} kcal Spielraum bis zum Ziel.`);
+const SYSTEM_PROMPT=`Du bist der beste Personal Coach der Welt: direkt, ehrlich, datenbasiert, keine Floskeln. Du duzt den Nutzer, antwortest kurz und präzise mit konkreten Zahlen. Fokus: Muskelaufbau (Protein ~2 g/kg, leichter Überschuss an Trainingstagen, progressive Überlastung) + Ausdauer (Zone-2, VO2max). Passe Empfehlungen an den heutigen Erholungsscore an.`;
+async function askCoach(text){ if(!state.apiKey) return demoReply();
+  const messages=state.chat.slice(-8).map(m=>({role:m.role==="coach"?"assistant":"user",content:m.text})); messages.push({role:"user",content:text});
+  const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":state.apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:MODEL,max_tokens:700,system:SYSTEM_PROMPT+"\n\nKONTEXT:\n"+coachContext(),messages})});
+  if(!res.ok) throw new Error("API "+res.status+": "+(await res.text()).slice(0,180));
+  const data=await res.json(); return (data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("")||"…"; }
+function demoReply(){ const pL=state.macros.protein.t-state.macros.protein.v,kL=state.calories.target-state.calories.consumed,r=state.recovery.score,b=[];
+  if(r<=33) b.push(`Recovery ${r}% – heute nur Zone 2 statt Intervalle.`); else if(r<=66) b.push(`Recovery ${r}% – moderates Workout ok, Intensität moderat halten.`); else b.push(`Recovery ${r}% – top, heute Vollgas.`);
+  if(pL>0) b.push(`Dir fehlen noch ${pL} g Protein – z. B. 200 g Magerquark (~24 g) + Whey (~25 g).`); if(kL>0) b.push(`Noch ${kL} kcal Spielraum.`);
   return b.join("\n\n")+"\n\n(Demo-Antwort – Claude-Key in ⚙ für echte Chats.)"; }
-function makeDailyMessage(){ const r=state.recovery.score, p=state.macros.protein.t-state.macros.protein.v;
-  const l1 = state.sleep.score>=75?`Guter Schlaf (Score ${state.sleep.score}).`:`Schlaf mittelmäßig (Score ${state.sleep.score}) – heute früher ins Bett.`;
-  const l2 = r>=67?`Erholung ${r}% → grünes Licht für hartes Training.`:r>=34?`Erholung ${r}% → moderat trainieren, Qualität vor Menge.`:`Erholung ${r}% → heute regenerieren.`;
-  const l3 = p>0?`Hol dir heute noch ${p} g Protein.`:`Protein im grünen Bereich – weiter so.`;
-  return `${l1} ${l2}\n\nHeute wichtig: ${l3}`; }
-function renderCoach(){ if(!state.coachMessage) state.coachMessage=makeDailyMessage();
-  document.getElementById("coachMsg").textContent=state.coachMessage; save(); }
-function renderChat(){ const log=document.getElementById("chatLog");
-  log.innerHTML=state.chat.map(m=>`<div class="msg ${m.role}">${escapeHtml(m.text)}</div>`).join(""); log.scrollTop=log.scrollHeight; }
-async function sendChat(){ const f=document.getElementById("chatField"), text=f.value.trim(); if(!text) return; f.value="";
-  state.chat.push({role:"user",text}); renderChat(); save();
-  const log=document.getElementById("chatLog"), typing=document.createElement("div");
+function makeDailyMessage(){ const r=state.recovery.score,p=state.macros.protein.t-state.macros.protein.v;
+  const l1=state.sleep.score>=75?`Guter Schlaf (Score ${state.sleep.score}).`:`Schlaf mittelmäßig (Score ${state.sleep.score}) – heute früher ins Bett.`;
+  const l2=r>=67?`Erholung ${r}% → grünes Licht für hartes Training.`:r>=34?`Erholung ${r}% → moderat trainieren, Qualität vor Menge.`:`Erholung ${r}% → heute regenerieren.`;
+  const l3=p>0?`Hol dir heute noch ${p} g Protein.`:`Protein im grünen Bereich – weiter so.`; return `${l1} ${l2}\n\nHeute wichtig: ${l3}`; }
+function renderCoach(){ document.getElementById("coachBadge").innerHTML=ICONS.brain; if(!state.coachMessage) state.coachMessage=makeDailyMessage(); document.getElementById("coachMsg").textContent=state.coachMessage; save(); }
+function renderChat(){ const log=document.getElementById("chatLog"); log.innerHTML=state.chat.map(m=>`<div class="msg ${m.role}">${esc(m.text)}</div>`).join(""); log.scrollTop=log.scrollHeight; }
+async function sendChat(){ const f=document.getElementById("chatField"),text=f.value.trim(); if(!text) return; f.value="";
+  state.chat.push({role:"user",text}); renderChat(); save(); const log=document.getElementById("chatLog"),typing=document.createElement("div");
   typing.className="msg coach typing"; typing.textContent="Coach tippt…"; log.appendChild(typing); log.scrollTop=log.scrollHeight;
-  try{ const reply=await askCoach(text); typing.remove(); state.chat.push({role:"coach",text:reply}); }
-  catch(e){ typing.remove(); state.chat.push({role:"coach",text:"⚠️ "+e.message}); }
-  renderChat(); save(); }
+  try{ const r=await askCoach(text); typing.remove(); state.chat.push({role:"coach",text:r}); } catch(e){ typing.remove(); state.chat.push({role:"coach",text:"⚠️ "+e.message}); } renderChat(); save(); }
 
-/* Modals + Events */
-function open(id){ document.getElementById(id).classList.add("open"); }
-function close(id){ document.getElementById(id).classList.remove("open"); }
+const open=id=>document.getElementById(id).classList.add("open"), close=id=>document.getElementById(id).classList.remove("open");
 document.getElementById("chatBtn").addEventListener("click",()=>{ renderChat(); open("chatOverlay"); document.getElementById("chatField").focus(); });
 document.getElementById("chatClose").addEventListener("click",()=>close("chatOverlay"));
 document.getElementById("chatSend").addEventListener("click",sendChat);
@@ -547,22 +418,18 @@ document.getElementById("chatField").addEventListener("keydown",e=>{ if(e.key===
 document.getElementById("regenBtn").addEventListener("click",()=>{ state.coachMessage=makeDailyMessage(); renderCoach(); });
 document.getElementById("goalAddBtn").addEventListener("click",()=>{ const i=document.getElementById("goalInput"); addGoal(i.value); i.value=""; });
 document.getElementById("goalInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ addGoal(e.target.value); e.target.value=""; } });
-document.getElementById("settingsBtn").addEventListener("click",()=>{
-  document.getElementById("apiKeyField").value=state.apiKey||"";
-  document.getElementById("setKcal").value=state.calories.target;
-  document.getElementById("setProtein").value=state.macros.protein.t; open("settingsOverlay"); });
+document.getElementById("settingsBtn").addEventListener("click",()=>{ document.getElementById("apiKeyField").value=state.apiKey||"";
+  document.getElementById("setGlass").value=state.glass; document.getElementById("setKcal").value=state.calories.target; document.getElementById("setProtein").value=state.macros.protein.t; open("settingsOverlay"); });
 document.getElementById("settingsClose").addEventListener("click",()=>close("settingsOverlay"));
-document.getElementById("settingsSave").addEventListener("click",()=>{
-  state.apiKey=document.getElementById("apiKeyField").value.trim();
-  state.calories.target=Number(document.getElementById("setKcal").value)||state.calories.target;
-  state.macros.protein.t=Number(document.getElementById("setProtein").value)||state.macros.protein.t;
-  save(); renderAll(); close("settingsOverlay"); });
-document.getElementById("resetDemo").addEventListener("click",()=>{ if(confirm("Alle Daten auf Demo zurücksetzen?")){ state=seedState(); save(); renderAll(); close("settingsOverlay"); } });
+document.getElementById("settingsSave").addEventListener("click",()=>{ state.apiKey=document.getElementById("apiKeyField").value.trim();
+  state.glass=Number(document.getElementById("setGlass").value)||2; state.calories.target=Number(document.getElementById("setKcal").value)||state.calories.target;
+  state.macros.protein.t=Number(document.getElementById("setProtein").value)||state.macros.protein.t; save(); applyGlass(); renderAll(); close("settingsOverlay"); });
+document.getElementById("resetDemo").addEventListener("click",()=>{ if(confirm("Alle Daten auf Demo zurücksetzen?")){ state=seedState(); save(); applyGlass(); renderAll(); close("settingsOverlay"); } });
 document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{ if(e.target===o) o.classList.remove("open"); }));
 
 function renderAll(){ renderRings(); renderMacros(); renderTraining(); renderStreak(); renderTiles(); renderGoals(); renderCoach(); }
-function init(){ document.getElementById("dateLine").textContent =
-  new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})+" · Demo-Daten";
+function init(){ const g=new URLSearchParams(location.search).get("glass"); if(g==="1"||g==="2"||g==="3") state.glass=Number(g);
+  applyGlass(); document.getElementById("dateLine").textContent=new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})+" · Demo-Daten";
   renderAll(); Ticker.start(); }
 init();
 </script>

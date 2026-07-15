@@ -1,0 +1,36 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Icon-Auswahl</title>
+<style>
+:root{--bg:#0A0A0C;--tp:#F5F5F7;--ts:#A1A1A6;--tt:#6E6E73;--blue-hi:#3E79C6;--hair:rgba(255,255,255,.1);
+--font:-apple-system,"SF Pro Text","Inter",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tp);font-family:var(--font);padding:28px 18px 40px;position:relative;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:-10%;z-index:-1;background:radial-gradient(38% 30% at 78% 6%,rgba(42,110,180,.30),transparent 60%),radial-gradient(40% 34% at 12% 90%,rgba(46,84,156,.16),transparent 60%);filter:blur(50px)}
+h1{font-size:24px;font-weight:700;letter-spacing:-.02em}
+.sub{color:var(--tt);font-size:13px;margin:4px 0 22px}
+.lbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--tt);margin:18px 4px 12px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.opt{background:rgba(255,255,255,.06);border:1px solid var(--hair);border-radius:16px;padding:16px 8px;display:flex;flex-direction:column;align-items:center;gap:9px;backdrop-filter:blur(24px)}
+.opt.pick{border-color:rgba(62,121,198,.7);background:rgba(42,94,160,.14)}
+.ico{color:var(--blue-hi)}.ico svg{width:28px;height:28px}
+.nm{font-size:11px;color:var(--ts)}
+.tag{font-size:9.5px;color:var(--blue-hi);font-weight:700;letter-spacing:.05em}
+</style></head><body>
+<h1>Icon-Vorschläge</h1><div class="sub">Für Streak & Training – der markierte ist mein aktueller Standard. Sag mir welche du willst.</div>
+<div class="lbl">Streak</div><div class="grid" id="streak"></div>
+<div class="lbl">Training</div><div class="grid" id="training"></div>
+<script>
+const svg=i=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+i+'</svg>';
+const I={
+ flame:svg('<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>'),
+ bolt:svg('<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/>'),
+ trophy:svg('<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.7V17c0 .6-.5 1-1 1.2C7.9 18.8 7 20.2 7 22"/><path d="M14 14.7V17c0 .6.5 1 1 1.2C16.1 18.8 17 20.2 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>'),
+ target:svg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6"/>'),
+ activity:svg('<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>'),
+ dumbbell:svg('<path d="M6.5 6.5v11"/><path d="M4 8.5v7"/><path d="M17.5 6.5v11"/><path d="M20 8.5v7"/><path d="M6.5 12h11"/>'),
+ heart:svg('<path d="M19 14c1.5-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z"/><path d="M3.5 12H9l1-2 2 4 1.5-3h6.2"/>')
+};
+const streak=[["flame","Flamme",1],["bolt","Blitz",0],["trophy","Pokal",0],["target","Ziel",0],["activity","Puls",0]];
+const training=[["dumbbell","Hantel",1],["heart","Herz/Cardio",0],["activity","Puls",0],["bolt","Energie",0],["trophy","Erfolg",0]];
+const row=(arr,el)=>document.getElementById(el).innerHTML=arr.map(([k,n,p])=>`<div class="opt ${p?"pick":""}"><div class="ico">${I[k]}</div><div class="nm">${n}</div>${p?'<div class="tag">STANDARD</div>':''}</div>`).join("");
+row(streak,"streak"); row(training,"training");
+</script></body></html>
