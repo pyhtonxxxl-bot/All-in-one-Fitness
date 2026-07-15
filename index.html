@@ -137,6 +137,13 @@
   .macro-bar { grid-column: 1 / -1; height: 7px; border-radius: 999px; background: var(--track); overflow: hidden; }
   .macro-bar > i { display: block; height: 100%; border-radius: 999px; background: var(--blue); transition: width 1s cubic-bezier(0.22,1,0.36,1); }
 
+  /* Charts */
+  .chart-svg { display: block; }
+  .chart-svg text { fill: var(--text-tertiary); font-size: 10px; font-family: var(--font); }
+  .chart-foot { display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; }
+  .chart-foot > span:first-child { font-family: var(--num); font-size: 18px; font-weight: 600; }
+  .chart-foot > span:last-child { font-size: 12px; color: var(--text-tertiary); }
+
   /* Kacheln */
   .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--gap); }
   @media (min-width: 560px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
@@ -260,6 +267,20 @@
     </div>
   </div>
 
+  <div class="section-label">Trends</div>
+  <div class="grid cols-2">
+    <div class="card glass">
+      <div class="card-title">Diese Woche · Training</div>
+      <div id="weekChart"></div>
+      <div class="chart-foot"><span id="weekTotal">—</span><span>Trainingsminuten</span></div>
+    </div>
+    <div class="card glass">
+      <div class="card-title">Gewicht · 30 Tage</div>
+      <div id="weightChart"></div>
+      <div class="chart-foot"><span id="weightNow">—</span><span id="weightDelta"></span></div>
+    </div>
+  </div>
+
   <div class="section-label">Weitere Werte</div>
   <div class="tiles" id="tiles"></div>
 </div>
@@ -314,7 +335,10 @@ function seedState() {
     calories:{consumed:1840,target:2650}, macros:{protein:{v:118,t:175},carbs:{v:190,t:280},fat:{v:58,t:80}},
     training:{type:"Krafttraining",when:"Heute, 07:20",duration:62,kcal:480,avgHr:128},
     metrics:{steps:8640,activeKcal:640,vo2max:48.2,weight:81.4},
-    streak:{count:12,days:[1,1,0,1,1,1,1,0,1,1,1,1,1,1]}, coachMessage:"",
+    streak:{count:12,days:[1,1,0,1,1,1,1,0,1,1,1,1,1,1]},
+    week:[{d:"Mo",min:55},{d:"Di",min:0},{d:"Mi",min:62},{d:"Do",min:38},{d:"Fr",min:70},{d:"Sa",min:0},{d:"So",min:45}],
+    weightHistory:[82.0,82.1,81.9,82.0,81.8,81.9,81.7,81.8,81.6,81.7,81.5,81.6,81.7,81.5,81.4,81.5,81.6,81.4,81.5,81.3,81.4,81.5,81.3,81.4,81.2,81.3,81.4,81.3,81.5,81.4],
+    coachMessage:"",
     goals:[{id:uid(),text:"Ernährung in Yazio loggen",done:true},{id:uid(),text:"Proteinziel erreichen (175 g)",done:false},
       {id:uid(),text:"Zone-2 Cardio, 30 min",done:false},{id:uid(),text:"Vor 23:00 im Bett",done:false}],
     chat:[], apiKey:""
@@ -323,7 +347,8 @@ function seedState() {
 let state = load();
 function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return seedState();
   const s=JSON.parse(raw); if(s.date!==todayISO()) s.date=todayISO();
-  s.glass=s.glass||2; s.streakIcon=s.streakIcon||"flame"; s.trainingIcon=s.trainingIcon||"dumbbell"; return s;
+  s.glass=s.glass||2; s.streakIcon=s.streakIcon||"flame"; s.trainingIcon=s.trainingIcon||"dumbbell";
+  const d=seedState(); s.week=s.week||d.week; s.weightHistory=s.weightHistory||d.weightHistory; return s;
 } catch { return seedState(); } }
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
 const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -362,6 +387,29 @@ function renderStreak(){ document.getElementById("streakIco").innerHTML=ICONS[st
 function renderTiles(){ const m=state.metrics; const T=[{l:"Schritte",v:m.steps.toLocaleString("de-DE"),u:"",tr:""},
   {l:"Aktive kcal",v:m.activeKcal,u:"kcal",tr:""},{l:"VO₂max",v:m.vo2max,u:"",tr:"↗ Ausdauer"},{l:"Gewicht",v:m.weight,u:"kg",tr:"↘ −0,6 kg/30T"}];
   document.getElementById("tiles").innerHTML=T.map(t=>`<div class="tile glass"><div class="tile-label">${t.l}</div><div class="tile-val">${t.v}<span class="tile-unit">${t.u}</span></div><div class="tile-trend">${t.tr}</div></div>`).join(""); }
+
+/* Charts (inline SVG, self-contained) */
+function barChart(week, hi){ const W=320,H=132,pad=16,n=week.length,max=Math.max(...week.map(w=>w.min),1),gap=(W-2*pad)/n,bw=gap*0.5; let s="";
+  week.forEach((w,i)=>{ const x=pad+i*gap+(gap-bw)/2,h=(H-42)*(w.min/max),y=H-24-h;
+    s+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(h,2).toFixed(1)}" rx="3" fill="${i===hi?'var(--blue-hi)':'var(--blue)'}" opacity="${w.min===0?0.28:1}"/>`;
+    s+=`<text x="${(pad+i*gap+gap/2).toFixed(1)}" y="${H-8}" text-anchor="middle">${w.d}</text>`; });
+  return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet">${s}</svg>`; }
+function lineChart(vals){ const W=320,H=132,pad=14,min=Math.min(...vals),max=Math.max(...vals),rng=(max-min)||1,step=(W-2*pad)/(vals.length-1);
+  const pts=vals.map((v,i)=>[pad+i*step, H-16-(H-34)*((v-min)/rng)]);
+  const line=pts.map(p=>p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+  const area=`${pad},${H-16} ${line} ${(pad+(vals.length-1)*step).toFixed(1)},${H-16}`;
+  return `<svg class="chart-svg" viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="xMidYMid meet">
+    <defs><linearGradient id="wgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--blue)" stop-opacity="0.35"/><stop offset="100%" stop-color="var(--blue)" stop-opacity="0"/></linearGradient></defs>
+    <polygon points="${area}" fill="url(#wgrad)"/>
+    <polyline points="${line}" fill="none" stroke="var(--blue-hi)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <circle cx="${pts[pts.length-1][0].toFixed(1)}" cy="${pts[pts.length-1][1].toFixed(1)}" r="3.5" fill="var(--blue-hi)"/></svg>`; }
+function renderTrends(){ const hi=(new Date().getDay()+6)%7; // Mo=0 … So=6
+  document.getElementById("weekChart").innerHTML=barChart(state.week,hi);
+  document.getElementById("weekTotal").textContent=state.week.reduce((a,w)=>a+w.min,0);
+  const wh=state.weightHistory; document.getElementById("weightChart").innerHTML=lineChart(wh);
+  const now=wh[wh.length-1], delta=now-wh[0];
+  document.getElementById("weightNow").textContent=now.toFixed(1).replace(".",",")+" kg";
+  document.getElementById("weightDelta").textContent=(delta<=0?"↘ ":"↗ ")+delta.toFixed(1).replace(".",",")+" kg / 30 T"; }
 
 function renderGoals(){ const list=document.getElementById("goalList");
   if(!state.goals.length) list.innerHTML=`<div class="empty-hint">Noch keine Ziele – füg oben eins hinzu.</div>`;
@@ -402,7 +450,11 @@ function demoReply(){ const pL=state.macros.protein.t-state.macros.protein.v,kL=
 function makeDailyMessage(){ const r=state.recovery.score,p=state.macros.protein.t-state.macros.protein.v;
   const l1=state.sleep.score>=75?`Guter Schlaf (Score ${state.sleep.score}).`:`Schlaf mittelmäßig (Score ${state.sleep.score}) – heute früher ins Bett.`;
   const l2=r>=67?`Erholung ${r}% → grünes Licht für hartes Training.`:r>=34?`Erholung ${r}% → moderat trainieren, Qualität vor Menge.`:`Erholung ${r}% → heute regenerieren.`;
-  const l3=p>0?`Hol dir heute noch ${p} g Protein.`:`Protein im grünen Bereich – weiter so.`; return `${l1} ${l2}\n\nHeute wichtig: ${l3}`; }
+  const l3=p>0?`Hol dir heute noch ${p} g Protein.`:`Protein im grünen Bereich – weiter so.`;
+  const meal=p>0?`\nVorschlag: ${mealSuggestion(p)}`:"";
+  return `${l1} ${l2}\n\nHeute wichtig: ${l3}${meal}`; }
+function mealSuggestion(gap){ const opts=[["200 g Magerquark",24],["Whey-Shake (30 g)",24],["150 g Hähnchenbrust",35],["3 Eier",18],["200 g Skyr",20]];
+  let sum=0,pick=[]; for(const[o,g] of opts){ if(sum>=gap) break; pick.push(o); sum+=g; } return pick.join(" + ")+` (~${sum} g Protein)`; }
 function renderCoach(){ document.getElementById("coachBadge").innerHTML=ICONS.brain; if(!state.coachMessage) state.coachMessage=makeDailyMessage(); document.getElementById("coachMsg").textContent=state.coachMessage; save(); }
 function renderChat(){ const log=document.getElementById("chatLog"); log.innerHTML=state.chat.map(m=>`<div class="msg ${m.role}">${esc(m.text)}</div>`).join(""); log.scrollTop=log.scrollHeight; }
 async function sendChat(){ const f=document.getElementById("chatField"),text=f.value.trim(); if(!text) return; f.value="";
@@ -427,7 +479,7 @@ document.getElementById("settingsSave").addEventListener("click",()=>{ state.api
 document.getElementById("resetDemo").addEventListener("click",()=>{ if(confirm("Alle Daten auf Demo zurücksetzen?")){ state=seedState(); save(); applyGlass(); renderAll(); close("settingsOverlay"); } });
 document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{ if(e.target===o) o.classList.remove("open"); }));
 
-function renderAll(){ renderRings(); renderMacros(); renderTraining(); renderStreak(); renderTiles(); renderGoals(); renderCoach(); }
+function renderAll(){ renderRings(); renderMacros(); renderTraining(); renderStreak(); renderTrends(); renderTiles(); renderGoals(); renderCoach(); }
 function init(){ const g=new URLSearchParams(location.search).get("glass"); if(g==="1"||g==="2"||g==="3") state.glass=Number(g);
   applyGlass(); document.getElementById("dateLine").textContent=new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})+" · Demo-Daten";
   renderAll(); Ticker.start(); }
