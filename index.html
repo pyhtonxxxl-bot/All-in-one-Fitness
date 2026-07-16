@@ -123,6 +123,9 @@
   .body-caption { text-align: center; font-size: 13.5px; color: var(--text-secondary); margin-top: 14px; }
   .body-legend { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; font-size: 11px; color: var(--text-tertiary); }
   .body-legend i { width: 14px; height: 14px; border-radius: 4px; background: #fff; display: inline-block; }
+  .muscle-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .chip { border: 1px solid var(--hairline); background: rgba(255,255,255,0.04); color: var(--text-secondary); padding: 8px 12px; border-radius: 999px; font-size: 13px; cursor: pointer; font-family: var(--font); }
+  .chip.on { background: #F2F2F3; color: #0B0B0C; border-color: #F2F2F3; font-weight: 600; }
 
   /* Coach */
   .coach-head { display: flex; align-items: center; gap: 11px; margin-bottom: 12px; }
@@ -269,7 +272,10 @@
   <div class="card glass"><div class="rings" id="rings"></div></div>
 
   <div class="card glass">
-    <div class="card-title">Muskelgruppen</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="card-title" style="margin:0;">Muskelgruppen</div>
+      <button class="btn small" id="bodyToggle">Rückseite</button>
+    </div>
     <div id="bodyMap"></div>
     <div class="body-caption" id="bodyCaption">Tippe eine Muskelgruppe an.</div>
     <div class="body-legend">weniger<i style="opacity:.14"></i><i style="opacity:.32"></i><i style="opacity:.58"></i><i style="opacity:.92"></i>mehr Aktivität</div>
@@ -391,6 +397,10 @@
       <div class="field-label">Protein (g)</div><input class="input" id="inProtein" type="number" style="width:100%;" />
       <div class="field-label">Kohlenhydrate (g)</div><input class="input" id="inCarbs" type="number" style="width:100%;" />
       <div class="field-label">Fett (g)</div><input class="input" id="inFat" type="number" style="width:100%;" />
+      <div class="field-label" style="margin-top:20px;">Training heute – trainierte Muskeln</div>
+      <div class="muscle-chips" id="muscleChips"></div>
+      <div class="coach-actions" style="margin-top:0;"><button class="btn small" id="trainSave">Als heute trainiert speichern</button></div>
+      <div class="note" id="trainNote"></div>
       <div class="coach-actions"><button class="btn primary small" id="entrySave">Speichern</button></div>
     </div>
   </div>
@@ -433,7 +443,8 @@ function seedState() {
     week:[{d:"Mo",min:55},{d:"Di",min:0},{d:"Mi",min:62},{d:"Do",min:38},{d:"Fr",min:70},{d:"Sa",min:0},{d:"So",min:45}],
     weightHistory:[82.0,82.1,81.9,82.0,81.8,81.9,81.7,81.8,81.6,81.7,81.5,81.6,81.7,81.5,81.4,81.5,81.6,81.4,81.5,81.3,81.4,81.5,81.3,81.4,81.2,81.3,81.4,81.3,81.5,81.4],
     targetWeight:79,
-    muscles:{Brust:3,Schultern:2,Arme:1,Bauch:2,Beine:1,Waden:0},
+    view:"front",
+    muscles:{Brust:3,Schultern:2,Arme:1,Trizeps:1,Bauch:2,"Rücken":2,Beine:1,Beinbeuger:0,"Gesäß":1,Waden:0},
     water:{count:5,goal:8},
     trainedDays:[1,2,4,6,8,9,11,13,15,16,18,20,22,23,25,27,29,30],
     reminders:{enabled:false},
@@ -448,7 +459,7 @@ function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return seedS
   const s=JSON.parse(raw); if(s.date!==todayISO()) s.date=todayISO();
   s.glass=s.glass||2; s.streakIcon=s.streakIcon||"flame"; s.trainingIcon=s.trainingIcon||"dumbbell";
   const d=seedState(); s.week=s.week||d.week; s.weightHistory=s.weightHistory||d.weightHistory;
-  s.water=s.water||d.water; s.trainedDays=s.trainedDays||d.trainedDays; s.reminders=s.reminders||d.reminders; s.targetWeight=s.targetWeight||d.targetWeight; s.muscles=s.muscles||d.muscles; return s;
+  s.water=s.water||d.water; s.trainedDays=s.trainedDays||d.trainedDays; s.reminders=s.reminders||d.reminders; s.targetWeight=s.targetWeight||d.targetWeight; s.muscles=Object.assign({},d.muscles,s.muscles||{}); s.view=s.view||"front"; return s;
 } catch { return seedState(); } }
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
 const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -471,29 +482,76 @@ function ringDetail(k){ const d={sleep:`Schlaf-Score ${state.sleep.score}/100\nD
   recovery:`Erholung ${state.recovery.score}%\nHRV ${state.recovery.hrv} ms · Ruhepuls ${state.recovery.rhr} bpm`,
   calories:`${state.calories.consumed} / ${state.calories.target} kcal\nNoch ${Math.max(0,state.calories.target-state.calories.consumed)} kcal`}[k]; alert(d); }
 
-/* Körper-Modell (Muskel-Map) */
-const BODY_SVG=`<svg class="body-svg" viewBox="0 0 200 340" xmlns="http://www.w3.org/2000/svg">
-<defs><radialGradient id="bodyGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.20"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
-<ellipse cx="100" cy="322" rx="74" ry="12" fill="url(#bodyGlow)"/>
-<circle cx="100" cy="26" r="15" class="base"/><rect x="93" y="39" width="14" height="9" rx="4" class="base"/>
-<rect x="83" y="136" width="34" height="20" rx="9" class="base"/>
-<circle cx="55" cy="168" r="7" class="base"/><circle cx="145" cy="168" r="7" class="base"/>
-<circle cx="88" cy="230" r="9" class="base"/><circle cx="112" cy="230" r="9" class="base"/>
-<ellipse cx="88" cy="306" rx="9" ry="6" class="base"/><ellipse cx="112" cy="306" rx="9" ry="6" class="base"/>
-<ellipse cx="72" cy="60" rx="15" ry="11" class="muscle" data-m="Schultern"/><ellipse cx="128" cy="60" rx="15" ry="11" class="muscle" data-m="Schultern"/>
-<rect x="72" y="62" width="26" height="26" rx="9" class="muscle" data-m="Brust"/><rect x="102" y="62" width="26" height="26" rx="9" class="muscle" data-m="Brust"/>
-<rect x="52" y="64" width="16" height="50" rx="8" class="muscle" data-m="Arme"/><rect x="132" y="64" width="16" height="50" rx="8" class="muscle" data-m="Arme"/>
-<rect x="50" y="116" width="14" height="48" rx="7" class="muscle" data-m="Arme"/><rect x="136" y="116" width="14" height="48" rx="7" class="muscle" data-m="Arme"/>
-<rect x="86" y="90" width="28" height="46" rx="8" class="muscle" data-m="Bauch"/>
-<rect x="76" y="92" width="9" height="40" rx="4" class="muscle" data-m="Bauch"/><rect x="115" y="92" width="9" height="40" rx="4" class="muscle" data-m="Bauch"/>
-<rect x="79" y="158" width="20" height="66" rx="10" class="muscle" data-m="Beine"/><rect x="101" y="158" width="20" height="66" rx="10" class="muscle" data-m="Beine"/>
-<rect x="80" y="238" width="17" height="62" rx="8" class="muscle" data-m="Waden"/><rect x="103" y="238" width="17" height="62" rx="8" class="muscle" data-m="Waden"/>
+/* Körper-Modell – anatomische Muskel-Map */
+const B_HEAD='<ellipse cx="100" cy="34" rx="14" ry="17"/>';
+const B_NECK='<path d="M93,49 L107,49 L109,64 Q100,69 91,64 Z"/>';
+const B_TORSO='<path d="M63,72 C58,84 60,102 63,118 C65,132 69,146 74,158 C78,168 82,176 86,184 L114,184 C118,176 122,168 126,158 C131,146 135,132 137,118 C140,102 142,84 137,72 C118,65 82,65 63,72 Z"/>';
+const B_ARML='<path d="M60,74 C51,86 48,104 48,124 C48,142 50,160 54,178 C55,184 61,184 62,178 C64,160 65,142 64,124 C64,106 63,90 68,78 Z"/>';
+const B_ARMR='<path d="M140,74 C149,86 152,104 152,124 C152,142 150,160 146,178 C145,184 139,184 138,178 C136,160 135,142 136,124 C136,106 137,90 132,78 Z"/>';
+const B_LEGL='<path d="M85,184 C79,204 78,234 81,264 C82,282 84,302 87,322 C88,338 90,352 92,362 C93,368 98,368 99,362 C100,344 100,322 100,300 C100,270 100,220 99,184 Z"/>';
+const B_LEGR='<path d="M115,184 C121,204 122,234 119,264 C118,282 116,302 113,322 C112,338 110,352 108,362 C107,368 102,368 101,362 C100,344 100,322 100,300 C100,270 100,220 101,184 Z"/>';
+const B_FEET='<ellipse cx="92" cy="366" rx="9" ry="5"/><ellipse cx="108" cy="366" rx="9" ry="5"/>';
+const BODY_PARTS=B_HEAD+B_NECK+B_TORSO+B_ARML+B_ARMR+B_LEGL+B_LEGR+B_FEET;
+const BODY_CLIP=B_HEAD+B_NECK+B_TORSO+B_ARML+B_ARMR+B_LEGL+B_LEGR;
+const M_FRONT=`
+<path class="muscle" data-m="Schultern" d="M58,74 C64,67 76,69 80,80 C81,90 74,94 66,92 C58,90 54,82 58,74 Z"/>
+<path class="muscle" data-m="Schultern" d="M142,74 C136,67 124,69 120,80 C119,90 126,94 134,92 C142,90 146,82 142,74 Z"/>
+<path class="muscle" data-m="Brust" d="M99,85 C87,82 75,86 72,97 C71,108 80,117 93,115 C98,114 99,104 99,94 Z"/>
+<path class="muscle" data-m="Brust" d="M101,85 C113,82 125,86 128,97 C129,108 120,117 107,115 C102,114 101,104 101,94 Z"/>
+<path class="muscle" data-m="Arme" d="M50,90 C47,106 48,124 52,140 C57,138 59,118 57,100 C56,92 53,88 50,90 Z"/>
+<path class="muscle" data-m="Arme" d="M53,146 C51,160 52,174 56,182 C60,180 60,164 59,150 C58,144 55,144 53,146 Z"/>
+<path class="muscle" data-m="Arme" d="M150,90 C153,106 152,124 148,140 C143,138 141,118 143,100 C144,92 147,88 150,90 Z"/>
+<path class="muscle" data-m="Arme" d="M147,146 C149,160 148,174 144,182 C140,180 140,164 141,150 C142,144 145,144 147,146 Z"/>
+<path class="muscle" data-m="Bauch" d="M90,112 C96,110 104,110 110,112 C110,130 109,150 106,164 C102,174 98,174 94,164 C91,150 90,130 90,112 Z"/>
+<path class="muscle" data-m="Bauch" d="M82,116 C78,132 79,150 85,162 C87,150 87,130 86,118 C85,113 83,113 82,116 Z"/>
+<path class="muscle" data-m="Bauch" d="M118,116 C122,132 121,150 115,162 C113,150 113,130 114,118 C115,113 117,113 118,116 Z"/>
+<path class="muscle" data-m="Beine" d="M85,190 C80,210 80,238 84,266 C89,262 92,234 91,208 C90,197 88,188 85,190 Z"/>
+<path class="muscle" data-m="Beine" d="M115,190 C120,210 120,238 116,266 C111,262 108,234 109,208 C110,197 112,188 115,190 Z"/>
+<path class="muscle" data-m="Waden" d="M85,270 C81,288 82,308 87,324 C91,318 92,298 90,280 C89,273 86,268 85,270 Z"/>
+<path class="muscle" data-m="Waden" d="M115,270 C119,288 118,308 113,324 C109,318 108,298 110,280 C111,273 114,268 115,270 Z"/>`;
+const M_BACK=`
+<path class="muscle" data-m="Schultern" d="M58,74 C64,67 76,69 80,80 C81,90 74,94 66,92 C58,90 54,82 58,74 Z"/>
+<path class="muscle" data-m="Schultern" d="M142,74 C136,67 124,69 120,80 C119,90 126,94 134,92 C142,90 146,82 142,74 Z"/>
+<path class="muscle" data-m="Rücken" d="M74,72 C68,84 67,102 70,120 C72,134 78,146 86,154 L114,154 C122,146 128,134 130,120 C133,102 132,84 126,72 C112,66 88,66 74,72 Z"/>
+<path class="muscle" data-m="Trizeps" d="M50,90 C47,106 48,124 52,140 C57,138 59,118 57,100 C56,92 53,88 50,90 Z"/>
+<path class="muscle" data-m="Trizeps" d="M53,146 C51,160 52,174 56,182 C60,180 60,164 59,150 C58,144 55,144 53,146 Z"/>
+<path class="muscle" data-m="Trizeps" d="M150,90 C153,106 152,124 148,140 C143,138 141,118 143,100 C144,92 147,88 150,90 Z"/>
+<path class="muscle" data-m="Trizeps" d="M147,146 C149,160 148,174 144,182 C140,180 140,164 141,150 C142,144 145,144 147,146 Z"/>
+<path class="muscle" data-m="Gesäß" d="M85,152 C79,153 75,163 77,173 C80,183 90,185 96,178 C100,171 97,157 91,152 C89,150 87,150 85,152 Z"/>
+<path class="muscle" data-m="Gesäß" d="M115,152 C121,153 125,163 123,173 C120,183 110,185 104,178 C100,171 103,157 109,152 C111,150 113,150 115,152 Z"/>
+<path class="muscle" data-m="Beinbeuger" d="M85,186 C80,206 80,236 84,264 C89,260 92,232 91,206 C90,195 88,184 85,186 Z"/>
+<path class="muscle" data-m="Beinbeuger" d="M115,186 C120,206 120,236 116,264 C111,260 108,232 109,206 C110,195 112,184 115,186 Z"/>
+<path class="muscle" data-m="Waden" d="M85,270 C81,288 82,308 87,324 C91,318 92,298 90,280 C89,273 86,268 85,270 Z"/>
+<path class="muscle" data-m="Waden" d="M115,270 C119,288 118,308 113,324 C109,318 108,298 110,280 C111,273 114,268 115,270 Z"/>`;
+const BODY_SVG=`<svg class="body-svg" viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg">
+<defs><radialGradient id="bg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.16"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient><clipPath id="clipB">${BODY_CLIP}</clipPath></defs>
+<ellipse cx="100" cy="374" rx="64" ry="10" fill="url(#bg)"/>
+<g class="base">${BODY_PARTS}</g>
+<g clip-path="url(#clipB)">${M_FRONT}</g>
 </svg>`;
-function renderBody(){ document.getElementById("bodyMap").innerHTML=BODY_SVG; const op=[0.14,0.32,0.58,0.92];
+const BODY_BACK=`<svg class="body-svg" viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg">
+<defs><radialGradient id="bgb" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.16"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient><clipPath id="clipBk">${BODY_CLIP}</clipPath></defs>
+<ellipse cx="100" cy="374" rx="64" ry="10" fill="url(#bgb)"/>
+<g class="base">${BODY_PARTS}</g>
+<g clip-path="url(#clipBk)">${M_BACK}</g>
+</svg>`;
+function renderBody(){ document.getElementById("bodyMap").innerHTML=(state.view==="back"?BODY_BACK:BODY_SVG);
+  const tb=document.getElementById("bodyToggle"); if(tb) tb.textContent=state.view==="back"?"Vorderseite":"Rückseite";
+  const op=[0.14,0.32,0.58,0.92];
   document.querySelectorAll("#bodyMap .muscle").forEach(el=>{ el.style.opacity=op[state.muscles[el.dataset.m]||0]; el.onclick=()=>selectMuscle(el.dataset.m); }); }
 function selectMuscle(m){ const lvl=state.muscles[m]||0, txt=["länger nicht trainiert","leichte Aktivität","gute Aktivität","hohe Aktivität – zuletzt heute"][lvl];
   document.getElementById("bodyCaption").textContent=m+" — "+txt;
   document.querySelectorAll("#bodyMap .muscle").forEach(el=>el.classList.toggle("sel",el.dataset.m===m)); }
+let trainSel=new Set();
+function renderMuscleChips(){ trainSel=new Set(); const list=["Brust","Schultern","Arme","Trizeps","Bauch","Rücken","Beine","Beinbeuger","Gesäß","Waden"];
+  const el=document.getElementById("muscleChips"); if(!el) return;
+  el.innerHTML=list.map(m=>`<button class="chip" data-m="${m}">${m}</button>`).join("");
+  el.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{ const m=c.dataset.m; if(trainSel.has(m)){trainSel.delete(m);c.classList.remove("on");}else{trainSel.add(m);c.classList.add("on");} }));
+  const note=document.getElementById("trainNote"); if(note) note.textContent=""; }
+function saveTraining(){ const note=document.getElementById("trainNote"); if(!trainSel.size){ note.textContent="Wähle mindestens eine Muskelgruppe."; return; }
+  const names=[...trainSel]; names.forEach(m=>state.muscles[m]=3); const t=new Date().getDate(); if(!state.trainedDays.includes(t)) state.trainedDays.push(t);
+  save(); renderAll(); trainSel=new Set(); document.querySelectorAll("#muscleChips .chip.on").forEach(c=>c.classList.remove("on"));
+  note.textContent="✓ "+names.join(", ")+" als heute trainiert markiert."; }
 
 function renderMacros(){ const D=[{name:"Kalorien",v:state.calories.consumed,t:state.calories.target,u:"kcal"},
   {name:"Protein",v:state.macros.protein.v,t:state.macros.protein.t,u:"g"},
@@ -645,9 +703,13 @@ function renderAll(){ renderRings(); renderBody(); renderMacros(); renderTrainin
 /* Wasser-Buttons */
 document.getElementById("waterPlus").addEventListener("click",()=>addWater(1));
 document.getElementById("waterMinus").addEventListener("click",()=>addWater(-1));
+/* Körpermodell: Vorder-/Rückansicht */
+document.getElementById("bodyToggle").addEventListener("click",()=>{ state.view=state.view==="back"?"front":"back"; save(); renderBody(); document.getElementById("bodyCaption").textContent="Tippe auf eine Muskelgruppe."; });
+/* Training speichern (Auto-Füllung) */
+document.getElementById("trainSave").addEventListener("click",saveTraining);
 /* Werte eintragen */
 document.getElementById("entryBtn").addEventListener("click",()=>{ document.getElementById("inWeight").value=state.metrics.weight; document.getElementById("inKcal").value=state.calories.consumed;
-  document.getElementById("inProtein").value=state.macros.protein.v; document.getElementById("inCarbs").value=state.macros.carbs.v; document.getElementById("inFat").value=state.macros.fat.v; open("entryOverlay"); });
+  document.getElementById("inProtein").value=state.macros.protein.v; document.getElementById("inCarbs").value=state.macros.carbs.v; document.getElementById("inFat").value=state.macros.fat.v; renderMuscleChips(); open("entryOverlay"); });
 document.getElementById("entryClose").addEventListener("click",()=>{ stopScan(); close("entryOverlay"); });
 document.getElementById("entrySave").addEventListener("click",()=>{ const n=(id,f)=>{ const v=Number(document.getElementById(id).value); return isNaN(v)?f:v; };
   const w=n("inWeight",state.metrics.weight); state.metrics.weight=w; state.weightHistory=state.weightHistory.slice(1).concat(Number(Number(w).toFixed(1)));
