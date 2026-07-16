@@ -4,6 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Elite Coach — Fitness Dashboard</title>
+<meta name="theme-color" content="#0A0A0C" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Elite Coach" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="manifest" href="manifest.json" />
 <style>
   /* ============================================================
      ELITE COACH — dunkel, Glas-Optik, minimal, Apple-Stil.
@@ -144,6 +150,31 @@
   .chart-foot > span:first-child { font-family: var(--num); font-size: 18px; font-weight: 600; }
   .chart-foot > span:last-child { font-size: 12px; color: var(--text-tertiary); }
 
+  /* Monats-Kalender */
+  .cal-dow, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 300px; }
+  .cal-dow { margin-bottom: 6px; }
+  .cal-dow span { text-align: center; font-size: 9px; color: var(--text-tertiary); font-weight: 600; }
+  .cal-cell { aspect-ratio: 1; border-radius: 6px; background: var(--track); display: grid; place-items: center; font-size: 9px; color: var(--text-tertiary); font-family: var(--num); }
+  .cal-cell.on { background: var(--blue); color: #fff; font-weight: 600; }
+  .cal-cell.empty { background: transparent; }
+  .cal-cell.today { outline: 1.5px solid var(--blue-hi); outline-offset: -1.5px; }
+
+  /* Wasser */
+  .water-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .water-num { font-family: var(--num); font-size: 22px; font-weight: 600; }
+  .water-btns { display: flex; gap: 6px; }
+  .water-glasses { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 14px; }
+  .water-drop { width: 16px; height: 20px; border-radius: 5px 5px 7px 7px; background: var(--track); }
+  .water-drop.on { background: var(--blue); }
+
+  /* Badges */
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; }
+  .badge-chip { display: flex; align-items: center; gap: 7px; padding: 8px 11px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--hairline); font-size: 12.5px; color: var(--text-tertiary); }
+  .badge-chip.on { color: var(--text-primary); background: rgba(42,94,160,0.16); border-color: rgba(62,121,198,0.35); }
+  .badge-chip .bd-ico { color: var(--text-tertiary); display: grid; }
+  .badge-chip.on .bd-ico { color: var(--blue-hi); }
+  .badge-chip svg { width: 15px; height: 15px; }
+
   /* Kacheln */
   .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--gap); }
   @media (min-width: 560px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
@@ -213,7 +244,10 @@
 <div class="wrap">
   <div class="topbar">
     <div><h1 class="dash-title">Elite Coach</h1><div class="dash-sub" id="dateLine">—</div></div>
-    <button class="icon-btn glass" id="settingsBtn" title="Einstellungen">⚙</button>
+    <div style="display:flex;gap:8px;">
+      <button class="icon-btn glass" id="entryBtn" title="Werte eintragen">＋</button>
+      <button class="icon-btn glass" id="settingsBtn" title="Einstellungen">⚙</button>
+    </div>
   </div>
 
   <div class="ticker-row">
@@ -267,16 +301,21 @@
     </div>
   </div>
 
-  <div class="grid cols-2" style="margin-top:var(--gap);">
+  <div class="card glass" style="margin-top:var(--gap);">
+    <div class="card-title" id="monthTitle">Trainings-Monat</div>
+    <div class="cal-dow"><span>M</span><span>D</span><span>M</span><span>D</span><span>F</span><span>S</span><span>S</span></div>
+    <div class="cal-grid" id="monthGrid"></div>
+  </div>
+  <div class="grid cols-2">
     <div class="card glass">
-      <div class="card-title">Diese Woche · Training</div>
-      <div id="weekChart"></div>
-      <div class="chart-foot"><span id="weekTotal">—</span><span>Trainingsminuten</span></div>
+      <div class="card-title">Wasser</div>
+      <div class="water-row"><span class="water-num" id="waterNum">0 / 0</span>
+        <div class="water-btns"><button class="btn small" id="waterMinus">−</button><button class="btn small" id="waterPlus">＋ Glas</button></div></div>
+      <div class="water-glasses" id="waterGlasses"></div>
     </div>
     <div class="card glass">
-      <div class="card-title">Gewicht · 30 Tage</div>
-      <div id="weightChart"></div>
-      <div class="chart-foot"><span id="weightNow">—</span><span id="weightDelta"></span></div>
+      <div class="card-title">Erfolge</div>
+      <div class="badges" id="badges"></div>
     </div>
   </div>
 
@@ -305,7 +344,24 @@
       <div class="field-label">Protein-Ziel (g)</div><input class="input" id="setProtein" type="number" style="width:100%;" />
       <div class="field-label">Kohlenhydrate-Ziel (g)</div><input class="input" id="setCarbs" type="number" style="width:100%;" />
       <div class="field-label">Fett-Ziel (g)</div><input class="input" id="setFat" type="number" style="width:100%;" />
+      <div class="field-label">Erinnerungen</div>
+      <div class="coach-actions" style="margin-top:0;"><button class="btn small" id="remEnable">Aktivieren</button><button class="btn small" id="remTest">Test</button></div>
+      <div class="note" id="remNote">Erinnerungen an Protein, Wasser & Schlaf – laufen, solange die App/der Browser-Tab offen ist. Für feste Zeiten (z. B. 6:00 Uhr) unabhängig vom Tab braucht es die installierte iOS-App oder ein Backend.</div>
       <div class="coach-actions"><button class="btn primary small" id="settingsSave">Speichern</button><button class="btn small" id="resetDemo">Demo zurücksetzen</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="entryOverlay">
+  <div class="sheet glass">
+    <div class="sheet-head"><h3>Werte eintragen</h3><button class="icon-btn" id="entryClose">✕</button></div>
+    <div style="overflow-y:auto;">
+      <div class="field-label">Gewicht heute (kg)</div><input class="input" id="inWeight" type="number" step="0.1" style="width:100%;" />
+      <div class="field-label">Kalorien gegessen (kcal)</div><input class="input" id="inKcal" type="number" style="width:100%;" />
+      <div class="field-label">Protein (g)</div><input class="input" id="inProtein" type="number" style="width:100%;" />
+      <div class="field-label">Kohlenhydrate (g)</div><input class="input" id="inCarbs" type="number" style="width:100%;" />
+      <div class="field-label">Fett (g)</div><input class="input" id="inFat" type="number" style="width:100%;" />
+      <div class="coach-actions"><button class="btn primary small" id="entrySave">Speichern</button></div>
     </div>
   </div>
 </div>
@@ -339,6 +395,9 @@ function seedState() {
     streak:{count:12,days:[1,1,0,1,1,1,1,0,1,1,1,1,1,1]},
     week:[{d:"Mo",min:55},{d:"Di",min:0},{d:"Mi",min:62},{d:"Do",min:38},{d:"Fr",min:70},{d:"Sa",min:0},{d:"So",min:45}],
     weightHistory:[82.0,82.1,81.9,82.0,81.8,81.9,81.7,81.8,81.6,81.7,81.5,81.6,81.7,81.5,81.4,81.5,81.6,81.4,81.5,81.3,81.4,81.5,81.3,81.4,81.2,81.3,81.4,81.3,81.5,81.4],
+    water:{count:5,goal:8},
+    trainedDays:[1,2,4,6,8,9,11,13,15,16,18,20,22,23,25,27,29,30],
+    reminders:{enabled:false},
     coachMessage:"",
     goals:[{id:uid(),text:"Ernährung in Yazio loggen",done:true},{id:uid(),text:"Proteinziel erreichen (175 g)",done:false},
       {id:uid(),text:"Zone-2 Cardio, 30 min",done:false},{id:uid(),text:"Vor 23:00 im Bett",done:false}],
@@ -349,7 +408,8 @@ let state = load();
 function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return seedState();
   const s=JSON.parse(raw); if(s.date!==todayISO()) s.date=todayISO();
   s.glass=s.glass||2; s.streakIcon=s.streakIcon||"flame"; s.trainingIcon=s.trainingIcon||"dumbbell";
-  const d=seedState(); s.week=s.week||d.week; s.weightHistory=s.weightHistory||d.weightHistory; return s;
+  const d=seedState(); s.week=s.week||d.week; s.weightHistory=s.weightHistory||d.weightHistory;
+  s.water=s.water||d.water; s.trainedDays=s.trainedDays||d.trainedDays; s.reminders=s.reminders||d.reminders; return s;
 } catch { return seedState(); } }
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
 const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -411,6 +471,22 @@ function renderTrends(){ const hi=(new Date().getDay()+6)%7; // Mo=0 … So=6
   const now=wh[wh.length-1], delta=now-wh[0];
   document.getElementById("weightNow").textContent=now.toFixed(1).replace(".",",")+" kg";
   document.getElementById("weightDelta").textContent=(delta<=0?"↘ ":"↗ ")+delta.toFixed(1).replace(".",",")+" kg / 30 T"; }
+
+/* Monats-Kalender (Variante 2, kleine Vierecke) */
+function renderMonth(){ const now=new Date(),y=now.getFullYear(),m=now.getMonth(),today=now.getDate();
+  const names=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+  document.getElementById("monthTitle").textContent="Trainings-Monat · "+names[m];
+  const first=(new Date(y,m,1).getDay()+6)%7, dim=new Date(y,m+1,0).getDate(), tr=new Set(state.trainedDays);
+  let h=""; for(let i=0;i<first;i++) h+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=dim;d++){ h+=`<div class="cal-cell${tr.has(d)?" on":""}${d===today?" today":""}">${d}</div>`; }
+  document.getElementById("monthGrid").innerHTML=h; }
+/* Wasser */
+function renderWater(){ const w=state.water; document.getElementById("waterNum").textContent=w.count+" / "+w.goal;
+  let h=""; for(let i=0;i<w.goal;i++) h+=`<div class="water-drop ${i<w.count?"on":""}"></div>`; document.getElementById("waterGlasses").innerHTML=h; }
+function addWater(n){ state.water.count=Math.max(0,Math.min(state.water.goal,state.water.count+n)); save(); renderWater(); }
+/* Badges */
+function renderBadges(){ const c=state.streak.count, M=[[7,"1 Woche"],[14,"2 Wochen"],[30,"1 Monat"],[60,"2 Monate"],[100,"100 Tage"]];
+  document.getElementById("badges").innerHTML=M.map(([d,n])=>`<div class="badge-chip ${c>=d?"on":""}"><span class="bd-ico">${c>=d?ICONS.trophy:ICONS.target}</span>${n}</div>`).join(""); }
 
 function renderGoals(){ const list=document.getElementById("goalList");
   if(!state.goals.length) list.innerHTML=`<div class="empty-hint">Noch keine Ziele – füg oben eins hinzu.</div>`;
@@ -483,10 +559,35 @@ document.getElementById("settingsSave").addEventListener("click",()=>{ state.api
 document.getElementById("resetDemo").addEventListener("click",()=>{ if(confirm("Alle Daten auf Demo zurücksetzen?")){ state=seedState(); save(); applyGlass(); renderAll(); close("settingsOverlay"); } });
 document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{ if(e.target===o) o.classList.remove("open"); }));
 
-function renderAll(){ renderRings(); renderMacros(); renderTraining(); renderStreak(); renderTrends(); renderTiles(); renderGoals(); renderCoach(); }
+function renderAll(){ renderRings(); renderMacros(); renderTraining(); renderStreak(); renderMonth(); renderWater(); renderBadges(); renderTiles(); renderGoals(); renderCoach(); }
+/* Wasser-Buttons */
+document.getElementById("waterPlus").addEventListener("click",()=>addWater(1));
+document.getElementById("waterMinus").addEventListener("click",()=>addWater(-1));
+/* Werte eintragen */
+document.getElementById("entryBtn").addEventListener("click",()=>{ document.getElementById("inWeight").value=state.metrics.weight; document.getElementById("inKcal").value=state.calories.consumed;
+  document.getElementById("inProtein").value=state.macros.protein.v; document.getElementById("inCarbs").value=state.macros.carbs.v; document.getElementById("inFat").value=state.macros.fat.v; open("entryOverlay"); });
+document.getElementById("entryClose").addEventListener("click",()=>close("entryOverlay"));
+document.getElementById("entrySave").addEventListener("click",()=>{ const n=(id,f)=>{ const v=Number(document.getElementById(id).value); return isNaN(v)?f:v; };
+  const w=n("inWeight",state.metrics.weight); state.metrics.weight=w; state.weightHistory=state.weightHistory.slice(1).concat(Number(Number(w).toFixed(1)));
+  state.calories.consumed=n("inKcal",state.calories.consumed); state.macros.protein.v=n("inProtein",state.macros.protein.v);
+  state.macros.carbs.v=n("inCarbs",state.macros.carbs.v); state.macros.fat.v=n("inFat",state.macros.fat.v); state.coachMessage=""; save(); renderAll(); close("entryOverlay"); });
+/* Erinnerungen */
+let remTimer=null;
+function notify(t,b){ if(state.reminders.enabled && "Notification" in window && Notification.permission==="granted") new Notification(t,{body:b,icon:"icon-192.png"}); }
+function scheduleReminders(){ if(remTimer) clearInterval(remTimer); if(!state.reminders.enabled) return;
+  remTimer=setInterval(()=>{ if(new Date().getMinutes()===0 && state.water.count<state.water.goal) notify("💧 Trink was","Noch "+(state.water.goal-state.water.count)+" Gläser bis zum Ziel."); },60000); }
+async function enableReminders(){ if(!("Notification" in window)){ alert("Dieser Browser unterstützt keine Benachrichtigungen."); return; }
+  const p=await Notification.requestPermission(); state.reminders.enabled=(p==="granted"); save();
+  document.getElementById("remNote").textContent = state.reminders.enabled ? "✓ Erinnerungen aktiv (solange die App/der Tab offen ist)." : "Benachrichtigungen wurden nicht erlaubt.";
+  scheduleReminders(); }
+document.getElementById("remEnable").addEventListener("click",enableReminders);
+document.getElementById("remTest").addEventListener("click",()=>{ if(state.reminders.enabled) notify("🔔 Elite Coach","So sehen deine Erinnerungen aus."); else enableReminders(); });
+/* PWA – Service Worker */
+if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+
 function init(){ const g=new URLSearchParams(location.search).get("glass"); if(g==="1"||g==="2"||g==="3") state.glass=Number(g);
   applyGlass(); document.getElementById("dateLine").textContent=new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})+" · Demo-Daten";
-  renderAll(); Ticker.start(); }
+  renderAll(); Ticker.start(); if(state.reminders.enabled) scheduleReminders(); }
 init();
 </script>
 </body>
