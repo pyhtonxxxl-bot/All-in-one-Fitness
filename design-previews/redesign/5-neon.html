@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>5 · Neon Sport</title>
+<style>
+:root{--bg:#07070C;--card:rgba(255,255,255,.035);--track:rgba(255,255,255,.08);--tp:#F4F6FF;--ts:#A6A9C4;--tt:#66698A;
+--lime:#C6FF3A;--cyan:#22E3D6;--magenta:#FF3D8B;--font:-apple-system,"Inter",system-ui,sans-serif;--num:ui-monospace,"SF Mono",Menlo,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tp);font-family:var(--font);padding:26px 16px 40px;position:relative;overflow-x:hidden;font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:-10%;z-index:-1;background:radial-gradient(45% 32% at 86% 4%,rgba(255,61,139,.22),transparent 60%),radial-gradient(48% 36% at 8% 52%,rgba(34,227,214,.16),transparent 60%),radial-gradient(45% 36% at 92% 94%,rgba(198,255,58,.12),transparent 60%);filter:blur(30px)}
+.badge{display:inline-block;font:800 10px/1 var(--num);letter-spacing:.14em;color:#04070a;background:var(--lime);padding:6px 10px;border-radius:6px;margin-bottom:14px}
+h1{font-size:32px;font-weight:800;letter-spacing:-.03em;text-transform:uppercase;background:linear-gradient(100deg,var(--cyan),var(--lime));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--tt);font:12px var(--num);margin-top:5px;letter-spacing:.03em}
+.card{background:var(--card);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:20px;backdrop-filter:blur(20px);box-shadow:0 14px 44px rgba(0,0,0,.55);margin-top:14px}
+.tt{font:800 11px var(--font);letter-spacing:.18em;text-transform:uppercase;color:var(--tt);margin-bottom:14px}
+.ticker{display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:12px;margin-top:14px;background:rgba(0,0,0,.4);border:1px solid rgba(34,227,214,.22)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}.tlab{font:800 9.5px var(--num);letter-spacing:.16em;color:var(--cyan)}.trow{flex:1;font:700 12.5px var(--num)}.tmeta{font:800 11px var(--num);color:var(--lime);padding:3px 8px;border-radius:6px;background:rgba(198,255,58,.12)}
+.rings{display:flex;justify-content:space-around;flex-wrap:wrap;gap:6px}.rb{display:flex;flex-direction:column;align-items:center;gap:8px}.rw{position:relative;width:114px;height:114px;display:grid;place-items:center}
+.rv{position:absolute;inset:0;display:grid;place-items:center;text-align:center}.rn{font:800 24px var(--num)}.ru{font:700 9px var(--font);color:var(--tt);margin-top:2px;text-transform:uppercase;letter-spacing:.08em}.rl{font:800 12px var(--font);color:var(--ts);text-transform:uppercase;letter-spacing:.06em}
+svg.ring{transform:rotate(-90deg);filter:drop-shadow(0 0 5px currentColor)}
+.coach{display:flex;gap:10px;align-items:center;margin-bottom:10px}.cb{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:17px;background:linear-gradient(135deg,var(--magenta),var(--cyan))}
+.cm{color:var(--ts);line-height:1.55;font-size:14px}.btn{margin-top:15px;border:none;font:800 13px var(--font);letter-spacing:.04em;text-transform:uppercase;color:#04070a;background:linear-gradient(100deg,var(--cyan),var(--lime));padding:11px 18px;border-radius:10px}
+.macro{margin-bottom:12px}.macro:last-child{margin:0}.mt{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px}.mt b{color:var(--ts);font-weight:700}.mt span{color:var(--tt);font-family:var(--num)}
+.bar{height:8px;border-radius:999px;background:var(--track);overflow:hidden}.bar>i{display:block;height:100%;border-radius:999px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.streak{display:flex;align-items:center;gap:14px}.sn{font:800 34px var(--num);color:var(--lime)}
+.tile-l{font:700 11px var(--font);color:var(--tt);text-transform:uppercase;letter-spacing:.05em}.tile-v{font:800 22px var(--num);margin-top:6px}
+</style></head><body>
+<div style="max-width:460px;margin:0 auto">
+<span class="badge">VORSCHLAG 5 · NEON SPORT</span>
+<h1>Elite Coach</h1><div class="sub">DONNERSTAG, 16. JULI · DEMO</div>
+<div class="ticker"><span class="dot"></span><span class="tlab">ZIELE</span><span class="trow">○ ZONE-2 CARDIO, 30 MIN</span><span class="tmeta">1/4</span></div>
+<div class="card"><div class="rings" id="rings"></div></div>
+<div class="card"><div class="coach"><div class="cb">🧠</div><div class="tt" style="margin:0">Dein Coach heute</div></div>
+<div class="cm">Guter Schlaf (82). Erholung 64 % → moderat trainieren.
+
+Heute: noch 57 g Protein.</div><button class="btn">Coach chatten</button></div>
+<div class="card"><div class="tt">Nährwerte</div>
+<div class="macro"><div class="mt"><b>Kalorien</b><span>1840 / 2650</span></div><div class="bar"><i style="width:69%;background:var(--magenta)"></i></div></div>
+<div class="macro"><div class="mt"><b>Protein</b><span>118 / 175 g</span></div><div class="bar"><i style="width:67%;background:var(--lime)"></i></div></div>
+<div class="macro"><div class="mt"><b>Kohlenhydrate</b><span>190 / 280 g</span></div><div class="bar"><i style="width:68%;background:var(--cyan)"></i></div></div></div>
+<div class="row2"><div class="card"><div class="tt">Streak</div><div class="streak"><div style="font-size:30px">🔥</div><div><span class="sn">12</span><span style="color:var(--tt);font-size:13px"> TAGE</span></div></div></div>
+<div class="card"><div class="tile-l">VO₂max</div><div class="tile-v">48.2</div><div style="font:11px var(--num);color:var(--lime);margin-top:4px">↗ AUSDAUER</div></div></div>
+</div>
+<script>
+const R=[["Schlaf",.82,"#22E3D6","82","Score"],["Erholung",.64,"#C6FF3A","64%","Recovery"],["Kalorien",.69,"#FF3D8B","810","kcal übrig"]];
+document.getElementById("rings").innerHTML=R.map(([l,p,c,n,u])=>{const s=114,w=9,r=(s-w)/2,C=2*Math.PI*r,o=C*(1-p);return`<div class="rb"><div class="rw"><svg class="ring" width="${s}" height="${s}" style="color:${c}"><circle cx="${s/2}" cy="${s/2}" r="${r}" fill="none" stroke="var(--track)" stroke-width="${w}"/><circle cx="${s/2}" cy="${s/2}" r="${r}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${o}"/></svg><div class="rv"><div><div class="rn" style="color:${c}">${n}</div><div class="ru">${u}</div></div></div></div><div class="rl">${l}</div></div>`}).join("");
+</script></body></html>

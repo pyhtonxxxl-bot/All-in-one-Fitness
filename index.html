@@ -272,6 +272,15 @@
     </div>
   </div>
 
+  <div class="card glass">
+    <div class="card-title">KI-Analyse</div>
+    <div class="coach-actions" style="margin-top:0;">
+      <button class="btn small" id="anWeek">📊 Wochen-Report</button>
+      <button class="btn small" id="anPattern">🧠 Muster finden</button>
+      <button class="btn small" id="anForecast">📈 Prognose</button>
+    </div>
+  </div>
+
   <div class="grid cols-2">
     <div class="card glass"><div class="card-title">Nährwerte</div><div class="macros" id="macros"></div></div>
     <div class="card glass">
@@ -356,6 +365,15 @@
   <div class="sheet glass">
     <div class="sheet-head"><h3>Werte eintragen</h3><button class="icon-btn" id="entryClose">✕</button></div>
     <div style="overflow-y:auto;">
+      <div class="field-label">Per Barcode hinzufügen</div>
+      <div class="goal-add">
+        <input class="input" id="barcodeInput" placeholder="Barcode-Nummer…" inputmode="numeric" />
+        <button class="btn small" id="barcodeScan" title="Scannen">📷</button>
+        <button class="btn small" id="barcodeLookup">Suchen</button>
+      </div>
+      <video id="barcodeVideo" playsinline muted style="display:none;width:100%;border-radius:12px;margin-bottom:8px;background:#000;"></video>
+      <div id="barcodeResult"></div>
+      <div class="field-label" style="margin-top:20px;">Manuell heute</div>
       <div class="field-label">Gewicht heute (kg)</div><input class="input" id="inWeight" type="number" step="0.1" style="width:100%;" />
       <div class="field-label">Kalorien gegessen (kcal)</div><input class="input" id="inKcal" type="number" style="width:100%;" />
       <div class="field-label">Protein (g)</div><input class="input" id="inProtein" type="number" style="width:100%;" />
@@ -363,6 +381,13 @@
       <div class="field-label">Fett (g)</div><input class="input" id="inFat" type="number" style="width:100%;" />
       <div class="coach-actions"><button class="btn primary small" id="entrySave">Speichern</button></div>
     </div>
+  </div>
+</div>
+
+<div class="overlay" id="analysisOverlay">
+  <div class="sheet glass">
+    <div class="sheet-head"><h3 id="analysisTitle">KI-Analyse</h3><button class="icon-btn" id="analysisClose">✕</button></div>
+    <div class="chat-log" id="analysisBody" style="white-space:pre-wrap;font-size:14.5px;line-height:1.6;color:var(--text-secondary);"></div>
   </div>
 </div>
 
@@ -395,6 +420,7 @@ function seedState() {
     streak:{count:12,days:[1,1,0,1,1,1,1,0,1,1,1,1,1,1]},
     week:[{d:"Mo",min:55},{d:"Di",min:0},{d:"Mi",min:62},{d:"Do",min:38},{d:"Fr",min:70},{d:"Sa",min:0},{d:"So",min:45}],
     weightHistory:[82.0,82.1,81.9,82.0,81.8,81.9,81.7,81.8,81.6,81.7,81.5,81.6,81.7,81.5,81.4,81.5,81.6,81.4,81.5,81.3,81.4,81.5,81.3,81.4,81.2,81.3,81.4,81.3,81.5,81.4],
+    targetWeight:79,
     water:{count:5,goal:8},
     trainedDays:[1,2,4,6,8,9,11,13,15,16,18,20,22,23,25,27,29,30],
     reminders:{enabled:false},
@@ -409,7 +435,7 @@ function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return seedS
   const s=JSON.parse(raw); if(s.date!==todayISO()) s.date=todayISO();
   s.glass=s.glass||2; s.streakIcon=s.streakIcon||"flame"; s.trainingIcon=s.trainingIcon||"dumbbell";
   const d=seedState(); s.week=s.week||d.week; s.weightHistory=s.weightHistory||d.weightHistory;
-  s.water=s.water||d.water; s.trainedDays=s.trainedDays||d.trainedDays; s.reminders=s.reminders||d.reminders; return s;
+  s.water=s.water||d.water; s.trainedDays=s.trainedDays||d.trainedDays; s.reminders=s.reminders||d.reminders; s.targetWeight=s.targetWeight||d.targetWeight; return s;
 } catch { return seedState(); } }
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
 const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -487,6 +513,25 @@ function addWater(n){ state.water.count=Math.max(0,Math.min(state.water.goal,sta
 /* Badges */
 function renderBadges(){ const c=state.streak.count, M=[[7,"1 Woche"],[14,"2 Wochen"],[30,"1 Monat"],[60,"2 Monate"],[100,"100 Tage"]];
   document.getElementById("badges").innerHTML=M.map(([d,n])=>`<div class="badge-chip ${c>=d?"on":""}"><span class="bd-ico">${c>=d?ICONS.trophy:ICONS.target}</span>${n}</div>`).join(""); }
+
+/* KI-Analyse (Wochen-Report / Muster / Prognose) */
+function fullContext(){ const wh=state.weightHistory; return [
+  "Ziel: Muskelaufbau + Ausdauer. Zielgewicht "+state.targetWeight+" kg.",
+  "Heute: Schlaf-Score "+state.sleep.score+", Erholung "+state.recovery.score+"% (HRV "+state.recovery.hrv+", Ruhepuls "+state.recovery.rhr+").",
+  "Ernährung: "+state.calories.consumed+"/"+state.calories.target+" kcal, Protein "+state.macros.protein.v+"/"+state.macros.protein.t+" g, KH "+state.macros.carbs.v+"/"+state.macros.carbs.t+", Fett "+state.macros.fat.v+"/"+state.macros.fat.t+".",
+  "Trainingsminuten Mo–So: "+state.week.map(w=>w.d+" "+w.min).join(", ")+".",
+  "Gewicht letzte 30 Tage (kg): "+wh.join(", ")+".",
+  "VO2max "+state.metrics.vo2max+", Schritte "+state.metrics.steps+", Streak "+state.streak.count+" Tage, trainierte Tage diesen Monat: "+state.trainedDays.length+"."
+].join("\n"); }
+async function aiAnalyze(type,instruction){ if(!state.apiKey) return demoAnalyze(type);
+  const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":state.apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:MODEL,max_tokens:900,system:SYSTEM_PROMPT+"\n\nDATEN:\n"+fullContext(),messages:[{role:"user",content:instruction}]})});
+  if(!res.ok) throw new Error("API "+res.status+": "+(await res.text()).slice(0,180));
+  const d=await res.json(); return (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("")||"…"; }
+function demoAnalyze(type){ const wh=state.weightHistory, delta=(wh[wh.length-1]-wh[0]).toFixed(1), toGo=(wh[wh.length-1]-state.targetWeight).toFixed(1), min=state.week.reduce((a,w)=>a+w.min,0);
+  if(type==="forecast") return `Prognose (Demo)\n\nGewicht ${wh[wh.length-1]} kg, Trend ${delta} kg/30 T. Bis Zielgewicht ${state.targetWeight} kg fehlen ${toGo} kg → bei diesem Tempo ca. ${Math.max(1,Math.round(Math.abs(toGo)/Math.max(0.1,Math.abs(delta))))} Monate.\nVO2max ${state.metrics.vo2max}, leicht steigend → Ausdauer entwickelt sich gut. Halte den Zone-2-Anteil hoch.\n\n(Demo – mit Claude-Key in ⚙ echte KI-Prognose.)`;
+  if(type==="pattern") return `Muster (Demo)\n\n• Nach < 7 h Schlaf liegt deine Erholung im Schnitt spürbar niedriger – Schlaf ist dein größter Recovery-Hebel.\n• Deine Woche hat ${min} Trainingsminuten; die freien Tage (Di, Sa) sind gut verteilt und stützen die Erholung.\n• Protein liegt oft unter Ziel (${state.macros.protein.v}/${state.macros.protein.t} g) – hier verschenkst du Muskelaufbau.\n\n(Demo – mit Claude-Key echte Muster-Analyse.)`;
+  return `Wochen-Report (Demo)\n\nGut: ${min} Trainingsminuten, Streak ${state.streak.count} Tage, VO2max ${state.metrics.vo2max}.\nWeniger gut: Protein unter Ziel; Gewicht ${delta} kg/30 T (Richtung stimmt).\nMuster: Erholung folgt dem Schlaf.\n\nZiele nächste Woche:\n1. Protein an 6/7 Tagen ≥ ${state.macros.protein.t} g\n2. 2× Zone-2-Cardio à 30 min\n3. An 5 Tagen ≥ 8.000 Schritte\n\n(Demo – mit Claude-Key echter KI-Report.)`; }
 
 function renderGoals(){ const list=document.getElementById("goalList");
   if(!state.goals.length) list.innerHTML=`<div class="empty-hint">Noch keine Ziele – füg oben eins hinzu.</div>`;
@@ -566,7 +611,7 @@ document.getElementById("waterMinus").addEventListener("click",()=>addWater(-1))
 /* Werte eintragen */
 document.getElementById("entryBtn").addEventListener("click",()=>{ document.getElementById("inWeight").value=state.metrics.weight; document.getElementById("inKcal").value=state.calories.consumed;
   document.getElementById("inProtein").value=state.macros.protein.v; document.getElementById("inCarbs").value=state.macros.carbs.v; document.getElementById("inFat").value=state.macros.fat.v; open("entryOverlay"); });
-document.getElementById("entryClose").addEventListener("click",()=>close("entryOverlay"));
+document.getElementById("entryClose").addEventListener("click",()=>{ stopScan(); close("entryOverlay"); });
 document.getElementById("entrySave").addEventListener("click",()=>{ const n=(id,f)=>{ const v=Number(document.getElementById(id).value); return isNaN(v)?f:v; };
   const w=n("inWeight",state.metrics.weight); state.metrics.weight=w; state.weightHistory=state.weightHistory.slice(1).concat(Number(Number(w).toFixed(1)));
   state.calories.consumed=n("inKcal",state.calories.consumed); state.macros.protein.v=n("inProtein",state.macros.protein.v);
@@ -582,6 +627,47 @@ async function enableReminders(){ if(!("Notification" in window)){ alert("Dieser
   scheduleReminders(); }
 document.getElementById("remEnable").addEventListener("click",enableReminders);
 document.getElementById("remTest").addEventListener("click",()=>{ if(state.reminders.enabled) notify("🔔 Elite Coach","So sehen deine Erinnerungen aus."); else enableReminders(); });
+/* KI-Analyse */
+async function runAnalysis(title,type,instruction){ document.getElementById("analysisTitle").textContent=title; const body=document.getElementById("analysisBody"); body.textContent="Analysiere…"; open("analysisOverlay");
+  try{ body.textContent=await aiAnalyze(type,instruction); } catch(e){ body.textContent="⚠️ "+e.message; } }
+document.getElementById("anWeek").addEventListener("click",()=>runAnalysis("📊 Wochen-Report","week","Erstelle einen kompakten Wochen-Report auf Deutsch: 1) Was lief gut, 2) was nicht, 3) erkennbare Muster, 4) drei konkrete Ziele für nächste Woche. Nutze konkrete Zahlen aus den Daten. Kurz und ohne Floskeln."));
+document.getElementById("anPattern").addEventListener("click",()=>runAnalysis("🧠 Muster","pattern","Finde 2–3 konkrete Muster oder Zusammenhänge in meinen Daten (z. B. Schlaf↔Erholung, Trainingsbelastung↔Recovery, Protein↔Ziel). Als kurze Erkenntnisse mit Zahlen."));
+document.getElementById("anForecast").addEventListener("click",()=>runAnalysis("📈 Prognose","forecast","Gib eine kurze, realistische Prognose mit Zahlen: Wann erreiche ich bei diesem Gewichtstrend mein Zielgewicht? Wie entwickelt sich meine Ausdauer/VO2max? Was sollte ich anpassen?"));
+document.getElementById("analysisClose").addEventListener("click",()=>close("analysisOverlay"));
+/* Barcode / Open Food Facts */
+let barcodeProduct=null,scanStream=null,scanTimer=null;
+async function lookupBarcode(code){ code=(code||"").trim(); const r=document.getElementById("barcodeResult"); if(!code){ r.innerHTML=""; return; }
+  r.innerHTML='<div style="color:var(--text-tertiary);margin-top:10px;">Suche…</div>';
+  try{ const res=await fetch("https://world.openfoodfacts.org/api/v2/product/"+encodeURIComponent(code)+".json?fields=product_name,brands,nutriments");
+    const d=await res.json();
+    if(d.status!==1||!d.product){ r.innerHTML='<div style="color:var(--text-tertiary);margin-top:10px;">Kein Produkt gefunden – Nummer prüfen oder unten manuell eintragen.</div>'; return; }
+    const n=d.product.nutriments||{}, name=[d.product.product_name,d.product.brands].filter(Boolean).join(" · ")||("Produkt "+code);
+    showProduct({name,kcal100:+n["energy-kcal_100g"]||0,protein100:+n.proteins_100g||0,carbs100:+n.carbohydrates_100g||0,fat100:+n.fat_100g||0});
+  }catch(e){ r.innerHTML='<div style="color:var(--text-tertiary);margin-top:10px;">Fehler bei der Suche (Internet nötig).</div>'; } }
+function showProduct(p){ barcodeProduct=p;
+  document.getElementById("barcodeResult").innerHTML=`<div style="margin-top:12px;font-weight:600;">${esc(p.name)}</div>
+    <div style="font-size:12.5px;color:var(--text-tertiary);margin:4px 0 10px;">pro 100 g: ${Math.round(p.kcal100)} kcal · ${Math.round(p.protein100)} P · ${Math.round(p.carbs100)} KH · ${Math.round(p.fat100)} F</div>
+    <div class="goal-add"><input class="input" id="gramInput" type="number" value="100" style="max-width:120px;" /><span style="align-self:center;color:var(--text-tertiary);">Gramm</span><button class="btn primary small" id="gramAdd">Hinzufügen</button></div>`;
+  document.getElementById("gramAdd").addEventListener("click",addFoodPortion); }
+function addFoodPortion(){ if(!barcodeProduct) return; const g=Number(document.getElementById("gramInput").value)||0, f=g/100;
+  state.calories.consumed=Math.round(state.calories.consumed+barcodeProduct.kcal100*f);
+  state.macros.protein.v=Math.round(state.macros.protein.v+barcodeProduct.protein100*f);
+  state.macros.carbs.v=Math.round(state.macros.carbs.v+barcodeProduct.carbs100*f);
+  state.macros.fat.v=Math.round(state.macros.fat.v+barcodeProduct.fat100*f);
+  state.coachMessage=""; save(); renderAll();
+  document.getElementById("barcodeResult").innerHTML='<div style="color:var(--blue-hi);margin-top:10px;">✓ '+g+' g hinzugefügt.</div>';
+  document.getElementById("inKcal").value=state.calories.consumed; document.getElementById("inProtein").value=state.macros.protein.v;
+  document.getElementById("inCarbs").value=state.macros.carbs.v; document.getElementById("inFat").value=state.macros.fat.v; barcodeProduct=null; }
+async function startScan(){ if(!("BarcodeDetector" in window)){ alert("Kamera-Scan wird von diesem Browser nicht unterstützt (z. B. iPhone-Safari). Bitte Barcode-Nummer eintippen."); return; }
+  const v=document.getElementById("barcodeVideo");
+  try{ scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}}); v.srcObject=scanStream; v.style.display="block"; await v.play();
+    const det=new BarcodeDetector({formats:["ean_13","ean_8","upc_a","upc_e","code_128"]});
+    scanTimer=setInterval(async()=>{ try{ const codes=await det.detect(v); if(codes&&codes.length){ const c=codes[0].rawValue; stopScan(); document.getElementById("barcodeInput").value=c; lookupBarcode(c); } }catch(e){} },400);
+  }catch(e){ alert("Kamera nicht verfügbar: "+e.message); } }
+function stopScan(){ if(scanTimer){ clearInterval(scanTimer); scanTimer=null; } if(scanStream){ scanStream.getTracks().forEach(t=>t.stop()); scanStream=null; } const v=document.getElementById("barcodeVideo"); if(v){ v.style.display="none"; v.srcObject=null; } }
+document.getElementById("barcodeLookup").addEventListener("click",()=>lookupBarcode(document.getElementById("barcodeInput").value));
+document.getElementById("barcodeInput").addEventListener("keydown",e=>{ if(e.key==="Enter") lookupBarcode(e.target.value); });
+document.getElementById("barcodeScan").addEventListener("click",startScan);
 /* PWA – Service Worker */
 if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 
