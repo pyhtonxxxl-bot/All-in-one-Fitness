@@ -21,20 +21,20 @@
     --hairline:      rgba(255, 255, 255, 0.09);
     --track:         rgba(255, 255, 255, 0.09);
 
-    --text-primary:   #F5F5F7;
-    --text-secondary: #A1A1A6;
-    --text-tertiary:  #6E6E73;
+    --text-primary:   #F7F7F8;
+    --text-secondary: #9A9A9F;
+    --text-tertiary:  #5C5C61;
 
-    /* Dunkelblau – bewusst ohne Rot-/Lila-Anteil */
-    --blue:    #2A5EA0;   /* Flächen, Balken, Punkte */
-    --blue-lo: #123C72;   /* tiefes Navy (Verlauf unten) */
-    --blue-hi: #3E79C6;   /* helleres Blau (Verlauf oben / Icons) */
+    /* Monochrom – Schwarz/Weiß, kein Farbakzent */
+    --blue:    #E9E9EB;   /* Flächen, Balken, Punkte (near-white) */
+    --blue-lo: #6E6E73;   /* Ring-Verlauf unten (grau) */
+    --blue-hi: #FFFFFF;   /* Ring-Verlauf oben / Icons (weiß) */
 
     /* Glas (Standard = Level 2) */
-    --glass-blur: 24px; --glass-sat: 1.2;
-    --glass-bg: rgba(255,255,255,0.06);
-    --glass-border: rgba(255,255,255,0.10);
-    --glass-hi: 0.06;
+    --glass-blur: 14px; --glass-sat: 1.05;
+    --glass-bg: rgba(255,255,255,0.045);
+    --glass-border: rgba(255,255,255,0.08);
+    --glass-hi: 0.05;
 
     --radius: 20px; --gap: 14px;
     --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -54,13 +54,8 @@
   }
   /* dezente Navy-Blobs, damit das Glas etwas zum Mattieren hat */
   body::before {
-    content: ""; position: fixed; inset: -10%; z-index: -2;
-    background:
-      radial-gradient(38% 30% at 78% 6%,  rgba(42,110,180,0.32), transparent 60%),
-      radial-gradient(34% 30% at 10% 28%, rgba(20,64,124,0.24), transparent 60%),
-      radial-gradient(40% 34% at 90% 80%, rgba(30,76,146,0.22), transparent 60%),
-      radial-gradient(40% 34% at 12% 94%, rgba(46,84,156,0.16), transparent 60%);
-    filter: blur(50px); animation: drift 42s ease-in-out infinite alternate;
+    content: ""; position: fixed; inset: 0; z-index: -2;
+    background: radial-gradient(85% 45% at 50% -8%, rgba(255,255,255,0.05), transparent 70%);
   }
   body::after {
     content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
@@ -94,7 +89,7 @@
   /* Ticker */
   .ticker-row { margin: 2px 0 16px; }
   .goal-ticker { display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 14px; position: relative; overflow: hidden; }
-  .goal-ticker-led-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-hi); box-shadow: 0 0 8px rgba(62,121,198,0.7); animation: pulse 1.8s ease-in-out infinite; }
+  .goal-ticker-led-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-hi); box-shadow: 0 0 8px rgba(255,255,255,0.55); animation: pulse 1.8s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(.82); } }
   .goal-ticker-label { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; color: var(--text-tertiary); }
   .goal-ticker-stage { flex: 1; height: 22px; position: relative; overflow: hidden; }
@@ -115,22 +110,22 @@
   .ring-fill { fill: none; stroke-linecap: round; transition: stroke-dashoffset 1s cubic-bezier(0.22,1,0.36,1); }
   .ring-wrap { position: relative; width: 118px; height: 118px; display: grid; place-items: center; }
   .ring-value { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
-  .ring-num { font-family: var(--num); font-size: 27px; font-weight: 600; letter-spacing: -0.02em; }
+  .ring-num { font-family: var(--num); font-size: 28px; font-weight: 700; letter-spacing: -0.03em; }
   .ring-unit { font-size: 10.5px; color: var(--text-tertiary); margin-top: 2px; }
   .ring-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
 
   /* Coach */
   .coach-head { display: flex; align-items: center; gap: 11px; margin-bottom: 12px; }
-  .coach-badge { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--blue-hi);
-    background: rgba(42,94,160,0.16); border: 1px solid rgba(62,121,198,0.28); }
+  .coach-badge { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: #fff;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); }
   .coach-badge svg { width: 19px; height: 19px; }
   .coach-msg { color: var(--text-secondary); line-height: 1.6; font-size: 15px; white-space: pre-wrap; }
   .btn { appearance: none; border: 1px solid var(--hairline); cursor: pointer; font-family: var(--font); font-weight: 600;
     color: var(--text-primary); background: rgba(255,255,255,0.07); padding: 10px 16px; border-radius: 12px; transition: transform .12s, background .18s; font-size: 14px; }
   .btn:hover { background: rgba(255,255,255,0.11); }
   .btn:active { transform: scale(.98); }
-  .btn.primary { background: var(--blue); border-color: transparent; color: #fff; }
-  .btn.primary:hover { background: #316bb2; }
+  .btn.primary { background: #F2F2F3; border-color: transparent; color: #0B0B0C; }
+  .btn.primary:hover { background: #ffffff; }
   .btn.small { padding: 8px 13px; font-size: 13px; }
   .coach-actions { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
 
@@ -155,7 +150,7 @@
   .cal-dow { margin-bottom: 6px; }
   .cal-dow span { text-align: center; font-size: 9px; color: var(--text-tertiary); font-weight: 600; }
   .cal-cell { aspect-ratio: 1; border-radius: 6px; background: var(--track); display: grid; place-items: center; font-size: 9px; color: var(--text-tertiary); font-family: var(--num); }
-  .cal-cell.on { background: var(--blue); color: #fff; font-weight: 600; }
+  .cal-cell.on { background: #EDEDEE; color: #0B0B0C; font-weight: 600; }
   .cal-cell.empty { background: transparent; }
   .cal-cell.today { outline: 1.5px solid var(--blue-hi); outline-offset: -1.5px; }
 
@@ -170,7 +165,7 @@
   /* Badges */
   .badges { display: flex; flex-wrap: wrap; gap: 8px; }
   .badge-chip { display: flex; align-items: center; gap: 7px; padding: 8px 11px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--hairline); font-size: 12.5px; color: var(--text-tertiary); }
-  .badge-chip.on { color: var(--text-primary); background: rgba(42,94,160,0.16); border-color: rgba(62,121,198,0.35); }
+  .badge-chip.on { color: var(--text-primary); background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.18); }
   .badge-chip .bd-ico { color: var(--text-tertiary); display: grid; }
   .badge-chip.on .bd-ico { color: var(--blue-hi); }
   .badge-chip svg { width: 15px; height: 15px; }
@@ -180,7 +175,7 @@
   @media (min-width: 560px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
   .tile { border-radius: var(--radius); padding: 16px; }
   .tile-label { font-size: 11px; color: var(--text-tertiary); letter-spacing: 0.04em; text-transform: uppercase; }
-  .tile-val { font-family: var(--num); font-size: 23px; font-weight: 600; margin-top: 7px; letter-spacing: -0.02em; }
+  .tile-val { font-family: var(--num); font-size: 24px; font-weight: 700; margin-top: 7px; letter-spacing: -0.03em; }
   .tile-unit { font-size: 12px; color: var(--text-tertiary); margin-left: 3px; font-weight: 400; }
   .tile-trend { font-size: 11.5px; margin-top: 5px; color: var(--text-tertiary); }
 
@@ -206,12 +201,12 @@
   .goal-add { display: flex; gap: 8px; margin-bottom: 14px; }
   .input { flex: 1; background: rgba(0,0,0,0.25); border: 1px solid var(--hairline); color: var(--text-primary);
     padding: 11px 13px; border-radius: 11px; font-family: var(--font); font-size: 14px; outline: none; }
-  .input:focus { border-color: rgba(62,121,198,0.6); }
+  .input:focus { border-color: rgba(255,255,255,0.35); }
   .goal-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--hairline); }
   .goal-item:first-child { border-top: none; }
   .goal-check { width: 22px; height: 22px; border-radius: 7px; border: 1.5px solid var(--text-tertiary); display: grid; place-items: center;
     cursor: pointer; flex: 0 0 22px; transition: all .15s; font-size: 13px; color: transparent; }
-  .goal-check.done { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .goal-check.done { background: #F2F2F3; border-color: #F2F2F3; color: #0B0B0C; }
   .goal-txt { flex: 1; font-size: 14.5px; }
   .goal-txt.done { color: var(--text-tertiary); text-decoration: line-through; }
   .goal-del { background: none; border: none; color: var(--text-tertiary); cursor: pointer; font-size: 18px; opacity: .55; }
@@ -229,7 +224,7 @@
   .sheet-head h3 { font-size: 17px; font-weight: 600; }
   .chat-log { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 4px 2px; }
   .msg { max-width: 85%; padding: 10px 13px; border-radius: 15px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
-  .msg.user { align-self: flex-end; background: var(--blue); color: #fff; border-bottom-right-radius: 5px; }
+  .msg.user { align-self: flex-end; background: #F2F2F3; color: #0B0B0C; border-bottom-right-radius: 5px; }
   .msg.coach { align-self: flex-start; background: rgba(255,255,255,0.08); color: var(--text-primary); border-bottom-left-radius: 5px; }
   .msg.typing { color: var(--text-tertiary); }
   .chat-input { display: flex; gap: 8px; margin-top: 12px; }
