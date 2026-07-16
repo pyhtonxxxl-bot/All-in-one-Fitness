@@ -172,22 +172,6 @@
   .cal-cell.empty { background: transparent; }
   .cal-cell.today { outline: 1.5px solid var(--blue-hi); outline-offset: -1.5px; }
 
-  /* Wasser */
-  .water-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .water-num { font-family: var(--num); font-size: 22px; font-weight: 600; }
-  .water-btns { display: flex; gap: 6px; }
-  .water-glasses { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 14px; }
-  .water-drop { width: 16px; height: 20px; border-radius: 5px 5px 7px 7px; background: var(--track); }
-  .water-drop.on { background: var(--blue); }
-
-  /* Badges */
-  .badges { display: flex; flex-wrap: wrap; gap: 8px; }
-  .badge-chip { display: flex; align-items: center; gap: 7px; padding: 8px 11px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--hairline); font-size: 12.5px; color: var(--text-tertiary); }
-  .badge-chip.on { color: var(--text-primary); background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.18); }
-  .badge-chip .bd-ico { color: var(--text-tertiary); display: grid; }
-  .badge-chip.on .bd-ico { color: var(--blue-hi); }
-  .badge-chip svg { width: 15px; height: 15px; }
-
   /* Kacheln */
   .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--gap); }
   @media (min-width: 560px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
@@ -340,19 +324,6 @@
     <div class="cal-dow"><span>M</span><span>D</span><span>M</span><span>D</span><span>F</span><span>S</span><span>S</span></div>
     <div class="cal-grid" id="monthGrid"></div>
   </div>
-  <div class="grid cols-2">
-    <div class="card glass">
-      <div class="card-title">Wasser</div>
-      <div class="water-row"><span class="water-num" id="waterNum">0 / 0</span>
-        <div class="water-btns"><button class="btn small" id="waterMinus">−</button><button class="btn small" id="waterPlus">＋ Glas</button></div></div>
-      <div class="water-glasses" id="waterGlasses"></div>
-    </div>
-    <div class="card glass">
-      <div class="card-title">Erfolge</div>
-      <div class="badges" id="badges"></div>
-    </div>
-  </div>
-
   <div class="section-label">Weitere Werte</div>
   <div class="tiles" id="tiles"></div>
 </div>
@@ -380,7 +351,7 @@
       <div class="field-label">Fett-Ziel (g)</div><input class="input" id="setFat" type="number" style="width:100%;" />
       <div class="field-label">Erinnerungen</div>
       <div class="coach-actions" style="margin-top:0;"><button class="btn small" id="remEnable">Aktivieren</button><button class="btn small" id="remTest">Test</button></div>
-      <div class="note" id="remNote">Erinnerungen an Protein, Wasser & Schlaf – laufen, solange die App/der Browser-Tab offen ist. Für feste Zeiten (z. B. 6:00 Uhr) unabhängig vom Tab braucht es die installierte iOS-App oder ein Backend.</div>
+      <div class="note" id="remNote">Erinnerungen an Protein & Schlaf – laufen, solange die App/der Browser-Tab offen ist. Für feste Zeiten (z. B. 6:00 Uhr) unabhängig vom Tab braucht es die installierte iOS-App oder ein Backend.</div>
       <div class="coach-actions"><button class="btn primary small" id="settingsSave">Speichern</button><button class="btn small" id="resetDemo">Demo zurücksetzen</button></div>
     </div>
   </div>
@@ -452,7 +423,6 @@ function seedState() {
     targetWeight:79,
     view:"front",
     muscles:{Brust:3,Schultern:2,Arme:1,Trizeps:1,Bauch:2,"Rücken":2,Beine:1,Beinbeuger:0,"Gesäß":1,Waden:0},
-    water:{count:5,goal:8},
     trainedDays:[1,2,4,6,8,9,11,13,15,16,18,20,22,23,25,27,29,30],
     reminders:{enabled:false},
     coachMessage:"",
@@ -466,7 +436,7 @@ function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return seedS
   const s=JSON.parse(raw); if(s.date!==todayISO()) s.date=todayISO();
   s.glass=s.glass||2; s.streakIcon=s.streakIcon||"flame"; s.trainingIcon=s.trainingIcon||"dumbbell";
   const d=seedState(); s.week=s.week||d.week; s.weightHistory=s.weightHistory||d.weightHistory;
-  s.water=s.water||d.water; s.trainedDays=s.trainedDays||d.trainedDays; s.reminders=s.reminders||d.reminders; s.targetWeight=s.targetWeight||d.targetWeight; s.muscles=Object.assign({},d.muscles,s.muscles||{}); s.view=s.view||"front"; return s;
+  s.trainedDays=s.trainedDays||d.trainedDays; s.reminders=s.reminders||d.reminders; s.targetWeight=s.targetWeight||d.targetWeight; s.muscles=Object.assign({},d.muscles,s.muscles||{}); s.view=s.view||"front"; return s;
 } catch { return seedState(); } }
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
 const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -618,13 +588,6 @@ function renderMonth(){ const now=new Date(),y=now.getFullYear(),m=now.getMonth(
   let h=""; for(let i=0;i<first;i++) h+='<div class="cal-cell empty"></div>';
   for(let d=1;d<=dim;d++){ h+=`<div class="cal-cell${tr.has(d)?" on":""}${d===today?" today":""}">${d}</div>`; }
   document.getElementById("monthGrid").innerHTML=h; }
-/* Wasser */
-function renderWater(){ const w=state.water; document.getElementById("waterNum").textContent=w.count+" / "+w.goal;
-  let h=""; for(let i=0;i<w.goal;i++) h+=`<div class="water-drop ${i<w.count?"on":""}"></div>`; document.getElementById("waterGlasses").innerHTML=h; }
-function addWater(n){ state.water.count=Math.max(0,Math.min(state.water.goal,state.water.count+n)); save(); renderWater(); }
-/* Badges */
-function renderBadges(){ const c=state.streak.count, M=[[7,"1 Woche"],[14,"2 Wochen"],[30,"1 Monat"],[60,"2 Monate"],[100,"100 Tage"]];
-  document.getElementById("badges").innerHTML=M.map(([d,n])=>`<div class="badge-chip ${c>=d?"on":""}"><span class="bd-ico">${c>=d?ICONS.trophy:ICONS.target}</span>${n}</div>`).join(""); }
 
 /* KI-Analyse (Wochen-Report / Muster / Prognose) */
 function fullContext(){ const wh=state.weightHistory; return [
@@ -727,10 +690,7 @@ document.getElementById("settingsSave").addEventListener("click",()=>{ state.api
 document.getElementById("resetDemo").addEventListener("click",()=>{ if(confirm("Alle Daten auf Demo zurücksetzen?")){ state=seedState(); save(); applyGlass(); renderAll(); close("settingsOverlay"); } });
 document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{ if(e.target===o) o.classList.remove("open"); }));
 
-function renderAll(){ renderRings(); renderBody(); renderMacros(); renderTraining(); renderStreak(); renderMonth(); renderWater(); renderBadges(); renderTiles(); renderGoals(); renderCoach(); }
-/* Wasser-Buttons */
-document.getElementById("waterPlus").addEventListener("click",()=>addWater(1));
-document.getElementById("waterMinus").addEventListener("click",()=>addWater(-1));
+function renderAll(){ renderRings(); renderBody(); renderMacros(); renderTraining(); renderStreak(); renderMonth(); renderTiles(); renderGoals(); renderCoach(); }
 /* Körpermodell: Vorder-/Rückansicht */
 document.getElementById("bodyToggle").addEventListener("click",()=>{ state.view=state.view==="back"?"front":"back"; save(); renderBody(); document.getElementById("bodyCaption").textContent="Tippe auf eine Muskelgruppe."; });
 /* Training speichern (Auto-Füllung) */
@@ -747,7 +707,7 @@ document.getElementById("entrySave").addEventListener("click",()=>{ const n=(id,
 let remTimer=null;
 function notify(t,b){ if(state.reminders.enabled && "Notification" in window && Notification.permission==="granted") new Notification(t,{body:b,icon:"icon-192.png"}); }
 function scheduleReminders(){ if(remTimer) clearInterval(remTimer); if(!state.reminders.enabled) return;
-  remTimer=setInterval(()=>{ if(new Date().getMinutes()===0 && state.water.count<state.water.goal) notify("💧 Trink was","Noch "+(state.water.goal-state.water.count)+" Gläser bis zum Ziel."); },60000); }
+  remTimer=setInterval(()=>{ const pL=state.macros.protein.t-state.macros.protein.v; if(new Date().getMinutes()===0 && pL>0) notify("🥩 Protein","Noch "+pL+" g Protein bis zum Ziel."); },60000); }
 async function enableReminders(){ if(!("Notification" in window)){ alert("Dieser Browser unterstützt keine Benachrichtigungen."); return; }
   const p=await Notification.requestPermission(); state.reminders.enabled=(p==="granted"); save();
   document.getElementById("remNote").textContent = state.reminders.enabled ? "✓ Erinnerungen aktiv (solange die App/der Tab offen ist)." : "Benachrichtigungen wurden nicht erlaubt.";
