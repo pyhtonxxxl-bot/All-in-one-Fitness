@@ -133,6 +133,11 @@
     background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); }
   .coach-badge svg { width: 19px; height: 19px; }
   .coach-msg { color: var(--text-secondary); line-height: 1.6; font-size: 15px; white-space: pre-wrap; }
+  .coach-kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 10px; }
+  .coach-focus { font-family: var(--num); font-size: 26px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); white-space: pre-line; }
+  .coach-sub { color: var(--text-secondary); font-size: 14px; line-height: 1.55; margin-top: 12px; }
+  .coach-chips { display: flex; gap: 7px; margin-top: 16px; flex-wrap: wrap; }
+  .coach-chips .pill { font-size: 12px; color: var(--text-secondary); border: 1px solid var(--hairline); background: rgba(255,255,255,0.04); padding: 6px 11px; border-radius: 999px; }
   .btn { appearance: none; border: 1px solid var(--hairline); cursor: pointer; font-family: var(--font); font-weight: 600;
     color: var(--text-primary); background: rgba(255,255,255,0.07); padding: 10px 16px; border-radius: 12px; transition: transform .12s, background .18s; font-size: 14px; }
   .btn:hover { background: rgba(255,255,255,0.11); }
@@ -282,8 +287,10 @@
   </div>
 
   <div class="card glass">
-    <div class="coach-head"><div class="coach-badge" id="coachBadge"></div><div class="card-title" style="margin:0;">Dein Coach heute</div></div>
-    <div class="coach-msg" id="coachMsg">…</div>
+    <div class="coach-kicker">Coach · Fokus heute</div>
+    <div class="coach-focus" id="coachHead">…</div>
+    <div class="coach-sub" id="coachSub"></div>
+    <div class="coach-chips" id="coachChips"></div>
     <div class="coach-actions">
       <button class="btn primary" id="chatBtn">Mit Coach chatten</button>
       <button class="btn small" id="regenBtn">Neue Analyse</button>
@@ -682,7 +689,18 @@ function makeDailyMessage(){ const r=state.recovery.score,p=state.macros.protein
   return `${l1} ${l2}\n\nHeute wichtig: ${l3}${meal}`; }
 function mealSuggestion(gap){ const opts=[["200 g Magerquark",24],["Whey-Shake (30 g)",24],["150 g Hähnchenbrust",35],["3 Eier",18],["200 g Skyr",20]];
   let sum=0,pick=[]; for(const[o,g] of opts){ if(sum>=gap) break; pick.push(o); sum+=g; } return pick.join(" + ")+` (~${sum} g Protein)`; }
-function renderCoach(){ document.getElementById("coachBadge").innerHTML=ICONS.brain; if(!state.coachMessage) state.coachMessage=makeDailyMessage(); document.getElementById("coachMsg").textContent=state.coachMessage; save(); }
+function makeCoachInsight(){ const r=state.recovery.score,s=state.sleep.score,p=state.macros.protein.t-state.macros.protein.v;
+  const head=r>=67?"Heute Vollgas –\ngrünes Licht.":r>=34?"Moderat trainieren –\nQualität vor Menge.":"Heute regenerieren –\nPause ist Training.";
+  const sleepPhrase=s>=75?`Schlaf sitzt (Score ${s})`:`Schlaf mittelmäßig (Score ${s}) – heute früher ins Bett`;
+  const proteinPhrase=p>0?`Noch ${p} g Protein offen: ${mealSuggestion(p)}.`:"Protein im grünen Bereich.";
+  const sub=`${sleepPhrase}, Erholung ${r} %. ${proteinPhrase}`;
+  const chips=[{i:"💤",t:`Schlaf ${s}`},{i:"⚡",t:`Erholung ${r} %`},p>0?{i:"🥩",t:`−${p} g Protein`}:{i:"🥩",t:"Protein ok"}];
+  return {head,sub,chips}; }
+function renderCoach(){ const ins=makeCoachInsight();
+  document.getElementById("coachHead").textContent=ins.head;
+  document.getElementById("coachSub").textContent=ins.sub;
+  document.getElementById("coachChips").innerHTML=ins.chips.map(c=>`<span class="pill">${c.i} ${c.t}</span>`).join("");
+  state.coachMessage=ins.head.replace(/\n/g," ")+" "+ins.sub; save(); }
 function renderChat(){ const log=document.getElementById("chatLog"); log.innerHTML=state.chat.map(m=>`<div class="msg ${m.role}">${esc(m.text)}</div>`).join(""); log.scrollTop=log.scrollHeight; }
 async function sendChat(){ const f=document.getElementById("chatField"),text=f.value.trim(); if(!text) return; f.value="";
   state.chat.push({role:"user",text}); renderChat(); save(); const log=document.getElementById("chatLog"),typing=document.createElement("div");
@@ -694,7 +712,7 @@ document.getElementById("chatBtn").addEventListener("click",()=>{ renderChat(); 
 document.getElementById("chatClose").addEventListener("click",()=>close("chatOverlay"));
 document.getElementById("chatSend").addEventListener("click",sendChat);
 document.getElementById("chatField").addEventListener("keydown",e=>{ if(e.key==="Enter") sendChat(); });
-document.getElementById("regenBtn").addEventListener("click",()=>{ state.coachMessage=makeDailyMessage(); renderCoach(); });
+document.getElementById("regenBtn").addEventListener("click",()=>{ state.coachMessage=""; renderCoach(); });
 document.getElementById("goalAddBtn").addEventListener("click",()=>{ const i=document.getElementById("goalInput"); addGoal(i.value); i.value=""; });
 document.getElementById("goalInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ addGoal(e.target.value); e.target.value=""; } });
 document.getElementById("settingsBtn").addEventListener("click",()=>{ document.getElementById("apiKeyField").value=state.apiKey||"";
