@@ -114,6 +114,16 @@
   .ring-unit { font-size: 10.5px; color: var(--text-tertiary); margin-top: 2px; }
   .ring-label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
 
+  /* Körper-Modell */
+  .body-svg { display: block; margin: 4px auto 0; max-width: 210px; width: 100%; }
+  .body-svg .base { fill: rgba(255,255,255,0.10); }
+  .body-svg .muscle { fill: #fff; cursor: pointer; transition: opacity .15s; }
+  .body-svg .muscle:hover { opacity: 1 !important; }
+  .body-svg .muscle.sel { stroke: #fff; stroke-width: 1.5; }
+  .body-caption { text-align: center; font-size: 13.5px; color: var(--text-secondary); margin-top: 14px; }
+  .body-legend { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; font-size: 11px; color: var(--text-tertiary); }
+  .body-legend i { width: 14px; height: 14px; border-radius: 4px; background: #fff; display: inline-block; }
+
   /* Coach */
   .coach-head { display: flex; align-items: center; gap: 11px; margin-bottom: 12px; }
   .coach-badge { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: #fff;
@@ -257,6 +267,13 @@
   </div>
 
   <div class="card glass"><div class="rings" id="rings"></div></div>
+
+  <div class="card glass">
+    <div class="card-title">Muskelgruppen</div>
+    <div id="bodyMap"></div>
+    <div class="body-caption" id="bodyCaption">Tippe eine Muskelgruppe an.</div>
+    <div class="body-legend">weniger<i style="opacity:.14"></i><i style="opacity:.32"></i><i style="opacity:.58"></i><i style="opacity:.92"></i>mehr Aktivität</div>
+  </div>
 
   <div class="card glass">
     <div class="coach-head"><div class="coach-badge" id="coachBadge"></div><div class="card-title" style="margin:0;">Dein Coach heute</div></div>
@@ -416,6 +433,7 @@ function seedState() {
     week:[{d:"Mo",min:55},{d:"Di",min:0},{d:"Mi",min:62},{d:"Do",min:38},{d:"Fr",min:70},{d:"Sa",min:0},{d:"So",min:45}],
     weightHistory:[82.0,82.1,81.9,82.0,81.8,81.9,81.7,81.8,81.6,81.7,81.5,81.6,81.7,81.5,81.4,81.5,81.6,81.4,81.5,81.3,81.4,81.5,81.3,81.4,81.2,81.3,81.4,81.3,81.5,81.4],
     targetWeight:79,
+    muscles:{Brust:3,Schultern:2,Arme:1,Bauch:2,Beine:1,Waden:0},
     water:{count:5,goal:8},
     trainedDays:[1,2,4,6,8,9,11,13,15,16,18,20,22,23,25,27,29,30],
     reminders:{enabled:false},
@@ -430,7 +448,7 @@ function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return seedS
   const s=JSON.parse(raw); if(s.date!==todayISO()) s.date=todayISO();
   s.glass=s.glass||2; s.streakIcon=s.streakIcon||"flame"; s.trainingIcon=s.trainingIcon||"dumbbell";
   const d=seedState(); s.week=s.week||d.week; s.weightHistory=s.weightHistory||d.weightHistory;
-  s.water=s.water||d.water; s.trainedDays=s.trainedDays||d.trainedDays; s.reminders=s.reminders||d.reminders; s.targetWeight=s.targetWeight||d.targetWeight; return s;
+  s.water=s.water||d.water; s.trainedDays=s.trainedDays||d.trainedDays; s.reminders=s.reminders||d.reminders; s.targetWeight=s.targetWeight||d.targetWeight; s.muscles=s.muscles||d.muscles; return s;
 } catch { return seedState(); } }
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
 const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -452,6 +470,30 @@ function renderRings(){ const kL=Math.max(0,Math.round(state.calories.target-sta
 function ringDetail(k){ const d={sleep:`Schlaf-Score ${state.sleep.score}/100\nDauer ${state.sleep.hours} h · Tief ${state.sleep.deep}% · REM ${state.sleep.rem}%`,
   recovery:`Erholung ${state.recovery.score}%\nHRV ${state.recovery.hrv} ms · Ruhepuls ${state.recovery.rhr} bpm`,
   calories:`${state.calories.consumed} / ${state.calories.target} kcal\nNoch ${Math.max(0,state.calories.target-state.calories.consumed)} kcal`}[k]; alert(d); }
+
+/* Körper-Modell (Muskel-Map) */
+const BODY_SVG=`<svg class="body-svg" viewBox="0 0 200 340" xmlns="http://www.w3.org/2000/svg">
+<defs><radialGradient id="bodyGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff" stop-opacity="0.20"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="100" cy="322" rx="74" ry="12" fill="url(#bodyGlow)"/>
+<circle cx="100" cy="26" r="15" class="base"/><rect x="93" y="39" width="14" height="9" rx="4" class="base"/>
+<rect x="83" y="136" width="34" height="20" rx="9" class="base"/>
+<circle cx="55" cy="168" r="7" class="base"/><circle cx="145" cy="168" r="7" class="base"/>
+<circle cx="88" cy="230" r="9" class="base"/><circle cx="112" cy="230" r="9" class="base"/>
+<ellipse cx="88" cy="306" rx="9" ry="6" class="base"/><ellipse cx="112" cy="306" rx="9" ry="6" class="base"/>
+<ellipse cx="72" cy="60" rx="15" ry="11" class="muscle" data-m="Schultern"/><ellipse cx="128" cy="60" rx="15" ry="11" class="muscle" data-m="Schultern"/>
+<rect x="72" y="62" width="26" height="26" rx="9" class="muscle" data-m="Brust"/><rect x="102" y="62" width="26" height="26" rx="9" class="muscle" data-m="Brust"/>
+<rect x="52" y="64" width="16" height="50" rx="8" class="muscle" data-m="Arme"/><rect x="132" y="64" width="16" height="50" rx="8" class="muscle" data-m="Arme"/>
+<rect x="50" y="116" width="14" height="48" rx="7" class="muscle" data-m="Arme"/><rect x="136" y="116" width="14" height="48" rx="7" class="muscle" data-m="Arme"/>
+<rect x="86" y="90" width="28" height="46" rx="8" class="muscle" data-m="Bauch"/>
+<rect x="76" y="92" width="9" height="40" rx="4" class="muscle" data-m="Bauch"/><rect x="115" y="92" width="9" height="40" rx="4" class="muscle" data-m="Bauch"/>
+<rect x="79" y="158" width="20" height="66" rx="10" class="muscle" data-m="Beine"/><rect x="101" y="158" width="20" height="66" rx="10" class="muscle" data-m="Beine"/>
+<rect x="80" y="238" width="17" height="62" rx="8" class="muscle" data-m="Waden"/><rect x="103" y="238" width="17" height="62" rx="8" class="muscle" data-m="Waden"/>
+</svg>`;
+function renderBody(){ document.getElementById("bodyMap").innerHTML=BODY_SVG; const op=[0.14,0.32,0.58,0.92];
+  document.querySelectorAll("#bodyMap .muscle").forEach(el=>{ el.style.opacity=op[state.muscles[el.dataset.m]||0]; el.onclick=()=>selectMuscle(el.dataset.m); }); }
+function selectMuscle(m){ const lvl=state.muscles[m]||0, txt=["länger nicht trainiert","leichte Aktivität","gute Aktivität","hohe Aktivität – zuletzt heute"][lvl];
+  document.getElementById("bodyCaption").textContent=m+" — "+txt;
+  document.querySelectorAll("#bodyMap .muscle").forEach(el=>el.classList.toggle("sel",el.dataset.m===m)); }
 
 function renderMacros(){ const D=[{name:"Kalorien",v:state.calories.consumed,t:state.calories.target,u:"kcal"},
   {name:"Protein",v:state.macros.protein.v,t:state.macros.protein.t,u:"g"},
@@ -599,7 +641,7 @@ document.getElementById("settingsSave").addEventListener("click",()=>{ state.api
 document.getElementById("resetDemo").addEventListener("click",()=>{ if(confirm("Alle Daten auf Demo zurücksetzen?")){ state=seedState(); save(); applyGlass(); renderAll(); close("settingsOverlay"); } });
 document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{ if(e.target===o) o.classList.remove("open"); }));
 
-function renderAll(){ renderRings(); renderMacros(); renderTraining(); renderStreak(); renderMonth(); renderWater(); renderBadges(); renderTiles(); renderGoals(); renderCoach(); }
+function renderAll(){ renderRings(); renderBody(); renderMacros(); renderTraining(); renderStreak(); renderMonth(); renderWater(); renderBadges(); renderTiles(); renderGoals(); renderCoach(); }
 /* Wasser-Buttons */
 document.getElementById("waterPlus").addEventListener("click",()=>addWater(1));
 document.getElementById("waterMinus").addEventListener("click",()=>addWater(-1));
