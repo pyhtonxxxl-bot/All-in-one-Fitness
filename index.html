@@ -583,7 +583,7 @@ function renderBody(){ const month=state.bodyMode==="month";
     if(month){ const c=(state.muscleMonth&&state.muscleMonth[m])||0;
       if(c){ el.style.fill=heatColor(1-c/max); el.style.opacity=1; } else { el.style.fill="#fff"; el.style.opacity=0.09; } }
     else { const on=(state.muscleToday||[]).includes(m);
-      el.style.fill=on?NAVY:"#fff"; el.style.opacity=on?1:0.16; }
+      el.style.fill=on?NAVY:"#fff"; el.style.opacity=on?1:0.42; }
     el.onclick=()=>selectMuscle(m); });
   document.getElementById("bodyCaption").textContent=month?"Monatsansicht – Farbe zeigt, wie oft du den Muskel diesen Monat trainiert hast.":"Tippe eine Muskelgruppe an.";
   const lg=document.getElementById("bodyLegend");
