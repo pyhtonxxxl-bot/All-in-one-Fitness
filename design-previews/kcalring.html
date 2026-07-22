@@ -1,0 +1,69 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Kalorien+Protein Ring</title>
+<style>
+:root{--bg:#0A0A0C;--tp:#F7F7F8;--ts:#9A9A9F;--tt:#5C5C61;--navy:#2E5490;
+ --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;
+ --num:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter",system-ui,sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tp);font-family:var(--font);padding:26px 18px 50px}
+h2{font-family:var(--num);font-size:20px;font-weight:700;letter-spacing:-0.02em}
+.hint{color:var(--tt);font-size:12.5px;margin:6px 0 22px;line-height:1.5}
+.row{display:flex;flex-wrap:wrap;gap:16px;justify-content:center}
+.cell{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:18px 14px;display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:200px}
+.name{font-size:12.5px;color:var(--ts);font-weight:600;text-align:center}
+.leg{display:flex;gap:12px;font-size:10.5px;color:var(--tt)}
+.leg i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:middle}
+svg{width:150px;height:150px;display:block}
+.rn{font-family:var(--num);font-weight:700;letter-spacing:-0.03em}
+</style></head><body>
+<h2>Kalorien + Protein in einem Ring</h2>
+<div class="hint">Außen = Kalorien, innen = Protein (verschachtelt). 3 Varianten – sag mir A, B oder C. Farben/Design passend zur App.</div>
+<div class="row">
+
+<!-- A: Navy innen, nur kcal Mitte -->
+<div class="cell">
+<svg viewBox="0 0 120 120">
+<g transform="rotate(-90 60 60)">
+<circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="10"/>
+<circle cx="60" cy="60" r="52" fill="none" stroke="#EDEDEE" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="101.3"/>
+<circle cx="60" cy="60" r="37" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="8"/>
+<circle cx="60" cy="60" r="37" fill="none" stroke="#3f72c4" stroke-width="8" stroke-linecap="round" stroke-dasharray="232.5" stroke-dashoffset="76.7"/>
+</g>
+<text x="60" y="60" text-anchor="middle" class="rn" font-size="26" fill="#F7F7F8">810</text>
+<text x="60" y="74" text-anchor="middle" font-size="8" fill="#9A9A9F" font-family="var(--font)">kcal übrig</text>
+</svg>
+<div class="leg"><span><i style="background:#EDEDEE"></i>Kalorien</span><span><i style="background:#3f72c4"></i>Protein</span></div>
+<div class="name">A · Navy innen, nur kcal</div></div>
+
+<!-- B: Navy innen, beide Werte -->
+<div class="cell">
+<svg viewBox="0 0 120 120">
+<g transform="rotate(-90 60 60)">
+<circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="10"/>
+<circle cx="60" cy="60" r="52" fill="none" stroke="#EDEDEE" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="101.3"/>
+<circle cx="60" cy="60" r="37" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="8"/>
+<circle cx="60" cy="60" r="37" fill="none" stroke="#3f72c4" stroke-width="8" stroke-linecap="round" stroke-dasharray="232.5" stroke-dashoffset="76.7"/>
+</g>
+<text x="60" y="56" text-anchor="middle" class="rn" font-size="23" fill="#F7F7F8">810</text>
+<text x="60" y="68" text-anchor="middle" font-size="7.5" fill="#9A9A9F">kcal übrig</text>
+<text x="60" y="82" text-anchor="middle" class="rn" font-size="11" fill="#5f93d6">118 g</text>
+</svg>
+<div class="leg"><span><i style="background:#EDEDEE"></i>Kalorien</span><span><i style="background:#3f72c4"></i>Protein</span></div>
+<div class="name">B · Navy innen, kcal + Protein</div></div>
+
+<!-- C: monochrom (grau innen), beide Werte -->
+<div class="cell">
+<svg viewBox="0 0 120 120">
+<g transform="rotate(-90 60 60)">
+<circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="10"/>
+<circle cx="60" cy="60" r="52" fill="none" stroke="#F4F4F5" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="101.3"/>
+<circle cx="60" cy="60" r="37" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="8"/>
+<circle cx="60" cy="60" r="37" fill="none" stroke="#8b8b90" stroke-width="8" stroke-linecap="round" stroke-dasharray="232.5" stroke-dashoffset="76.7"/>
+</g>
+<text x="60" y="56" text-anchor="middle" class="rn" font-size="23" fill="#F7F7F8">810</text>
+<text x="60" y="68" text-anchor="middle" font-size="7.5" fill="#9A9A9F">kcal übrig</text>
+<text x="60" y="82" text-anchor="middle" class="rn" font-size="11" fill="#c7c7cc">118 g</text>
+</svg>
+<div class="leg"><span><i style="background:#F4F4F5"></i>Kalorien</span><span><i style="background:#8b8b90"></i>Protein</span></div>
+<div class="name">C · Monochrom, kcal + Protein</div></div>
+
+</div></body></html>
