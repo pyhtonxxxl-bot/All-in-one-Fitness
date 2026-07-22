@@ -94,15 +94,15 @@
   .goal-ticker-led-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-hi); box-shadow: 0 0 8px rgba(255,255,255,0.55); animation: pulse 1.8s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(.82); } }
   .goal-ticker-label { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; color: var(--text-tertiary); }
-  .goal-ticker-stage { flex: 1; height: 22px; position: relative; overflow: hidden; }
-  .goal-ticker-row { position: absolute; inset: 0; display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 500; color: var(--text-primary); white-space: nowrap; }
+  .goal-ticker-stage { flex: 1; height: 22px; position: relative; overflow: hidden; perspective: 340px; }
+  .goal-ticker-row { position: absolute; inset: 0; display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 500; color: var(--text-primary); white-space: nowrap; transform-origin: center center; backface-visibility: hidden; }
   .goal-ticker-status { width: 16px; flex: 0 0 16px; text-align: center; color: var(--text-tertiary); }
   .goal-ticker-text { flex: 1; overflow: hidden; text-overflow: ellipsis; }
   .goal-ticker-meta { font-size: 12px; font-weight: 600; color: var(--text-secondary); padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,0.06); }
-  .goal-ticker-row.is-leaving  { animation: ticker-leave .45s cubic-bezier(0.55,0,0.55,1) forwards; }
-  .goal-ticker-row.is-entering { animation: ticker-enter .45s cubic-bezier(0.22,1,0.36,1) forwards; }
-  @keyframes ticker-leave { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-100%); } }
-  @keyframes ticker-enter { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+  .goal-ticker-row.is-leaving  { animation: ticker-leave .34s cubic-bezier(0.55,0,0.55,1) forwards; }
+  .goal-ticker-row.is-entering { animation: ticker-enter .40s cubic-bezier(0.22,1,0.36,1) .16s both; }
+  @keyframes ticker-leave { from { opacity: 1; transform: rotateX(0) translateY(0); } to { opacity: 0; transform: rotateX(90deg) translateY(-60%); } }
+  @keyframes ticker-enter { from { opacity: 0; transform: rotateX(-90deg) translateY(60%); } to { opacity: 1; transform: rotateX(0) translateY(0); } }
 
   /* Ringe */
   .rings { display: flex; justify-content: space-around; gap: 8px; flex-wrap: wrap; }
@@ -702,13 +702,16 @@ const Ticker=(()=>{ const stage=document.getElementById("goalTickerStage"),meta=
     else items=g.filter(x=>!x.done).map(x=>({s:"pending",t:x.text})); return{items,done,total}; };
   const gl=s=>s==="done"?"✓":s==="pending"?"○":"·";
   const tick=()=>{ const{items,done,total}=build(); if(i>=items.length) i=0; const it=items[i]; meta.textContent=total?Math.round(done/total*100)+" %":"0 %";
-    const old=stage.querySelector(".goal-ticker-row"),row=document.createElement("div"); row.className="goal-ticker-row"+(first?"":" is-entering");
+    const ex=[...stage.querySelectorAll(".goal-ticker-row")],old=ex.pop(); ex.forEach(r=>r.remove());
+    const row=document.createElement("div"); row.className="goal-ticker-row";
     row.innerHTML=`<span class="goal-ticker-status">${gl(it.s)}</span><span class="goal-ticker-text">${esc(it.t)}</span>`;
-    if(old&&!first){ old.classList.add("is-leaving"); setTimeout(()=>old.remove(),460); } else if(old) old.remove(); stage.appendChild(row); i++; first=false; };
+    if(old){ if(first){ old.remove(); } else { old.classList.add("is-leaving"); setTimeout(()=>old.remove(),520); } }
+    if(!first) row.classList.add("is-entering");
+    stage.appendChild(row); i++; first=false; };
   const auto=()=>{ if(timer) clearInterval(timer); timer=setInterval(tick,5000); };
   window.addEventListener("goals-changed",()=>{ i=0; tick(); auto(); });
   if(root) root.addEventListener("click",()=>{ tick(); auto(); });
-  return { start:()=>{ tick(); auto(); } }; })();
+  return { start:()=>{ stage.innerHTML=""; first=true; tick(); auto(); } }; })();
 
 function coachContext(){ const kL=state.calories.target-state.calories.consumed,pL=state.macros.protein.t-state.macros.protein.v;
   return [`Datum: ${state.date}`,`Schlaf: ${state.sleep.score}/100 (${state.sleep.hours} h)`,`Erholung: ${state.recovery.score}% (HRV ${state.recovery.hrv}, RHR ${state.recovery.rhr})`,
