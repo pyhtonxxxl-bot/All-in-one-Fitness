@@ -145,6 +145,20 @@
   .body-mbtn { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--hairline); background: rgba(255,255,255,0.04); }
   .body-mbtn.on { background: #2E5490; border-color: #2E5490; color: #fff; }
   .goal-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); border: 1px solid var(--hairline); border-radius: 6px; padding: 2px 6px; margin-left: 8px; vertical-align: middle; }
+  /* KI-Analyse inline */
+  .an-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .an-chips .btn.on { background: #F2F2F3; border-color: transparent; color: #0B0B0C; }
+  .an-result:empty { display: none; }
+  .an-result { margin-top: 18px; border-top: 1px solid var(--hairline); padding-top: 16px; }
+  .an-loading { color: var(--text-tertiary); font-size: 13.5px; }
+  .an-title { font-family: var(--num); font-size: 17px; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); }
+  .an-sec { margin-top: 14px; }
+  .an-h { font-size: 11px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 8px; }
+  .an-list { list-style: none; display: grid; gap: 7px; }
+  .an-list li { position: relative; padding-left: 16px; color: var(--text-secondary); font-size: 13.5px; line-height: 1.5; }
+  .an-list li::before { content: ""; position: absolute; left: 2px; top: 8px; width: 4px; height: 4px; border-radius: 50%; background: var(--text-tertiary); }
+  .an-p { color: var(--text-secondary); font-size: 13.5px; line-height: 1.55; margin-top: 8px; }
+  .an-note { margin-top: 14px; font-size: 12px; color: var(--text-tertiary); }
   .btn { appearance: none; border: 1px solid var(--hairline); cursor: pointer; font-family: var(--font); font-weight: 600;
     color: var(--text-primary); background: rgba(255,255,255,0.07); padding: 10px 16px; border-radius: 12px; transition: transform .12s, background .18s; font-size: 14px; }
   .btn:hover { background: rgba(255,255,255,0.11); }
@@ -293,11 +307,8 @@
 
   <div class="card glass">
     <div class="card-title">KI-Analyse</div>
-    <div class="coach-actions" style="margin-top:0;">
-      <button class="btn small" id="anWeek"><i class="mk"></i>Wochen-Report</button>
-      <button class="btn small" id="anPattern"><i class="mk"></i>Muster finden</button>
-      <button class="btn small" id="anForecast"><i class="mk"></i>Prognose</button>
-    </div>
+    <div class="an-chips" id="anChips"></div>
+    <div class="an-result" id="anResult"></div>
   </div>
 
   <div class="grid cols-2">
@@ -394,12 +405,6 @@
   </div>
 </div>
 
-<div class="overlay" id="analysisOverlay">
-  <div class="sheet glass">
-    <div class="sheet-head"><h3 id="analysisTitle">KI-Analyse</h3><button class="icon-btn" id="analysisClose">✕</button></div>
-    <div class="chat-log" id="analysisBody" style="white-space:pre-wrap;font-size:14.5px;line-height:1.6;color:var(--text-secondary);"></div>
-  </div>
-</div>
 
 <script>
 const KEY = "elitecoach:state:v3";
@@ -633,15 +638,53 @@ function fullContext(){ const wh=state.weightHistory; return [
   "Gewicht letzte 30 Tage (kg): "+wh.join(", ")+".",
   "VO2max "+state.metrics.vo2max+", Schritte "+state.metrics.steps+", Streak "+state.streak.count+" Tage, trainierte Tage diesen Monat: "+state.trainedDays.length+"."
 ].join("\n"); }
-async function aiAnalyze(type,instruction){ if(!state.apiKey) return demoAnalyze(type);
+const AN_FORMAT="\n\nAntworte auf Deutsch in kurzem, strukturiertem Markdown: '## Überschrift' für 2–3 Abschnitte, darunter jeweils '- ' Stichpunkte (max. 3 je Abschnitt). Nutze konkrete Zahlen. Keine Fließtexte, keine Einleitung, keine Floskeln.";
+async function aiAnalyzeText(instruction){
   const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"content-type":"application/json","x-api-key":state.apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
-    body:JSON.stringify({model:MODEL,max_tokens:900,system:SYSTEM_PROMPT+"\n\nDATEN:\n"+fullContext(),messages:[{role:"user",content:instruction}]})});
+    body:JSON.stringify({model:MODEL,max_tokens:900,system:SYSTEM_PROMPT+"\n\nDATEN:\n"+fullContext(),messages:[{role:"user",content:instruction+AN_FORMAT}]})});
   if(!res.ok) throw new Error("API "+res.status+": "+(await res.text()).slice(0,180));
   const d=await res.json(); return (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("")||"…"; }
-function demoAnalyze(type){ const wh=state.weightHistory, delta=(wh[wh.length-1]-wh[0]).toFixed(1), toGo=(wh[wh.length-1]-state.targetWeight).toFixed(1), min=state.week.reduce((a,w)=>a+w.min,0);
-  if(type==="forecast") return `Prognose (Demo)\n\nGewicht ${wh[wh.length-1]} kg, Trend ${delta} kg/30 T. Bis Zielgewicht ${state.targetWeight} kg fehlen ${toGo} kg → bei diesem Tempo ca. ${Math.max(1,Math.round(Math.abs(toGo)/Math.max(0.1,Math.abs(delta))))} Monate.\nVO2max ${state.metrics.vo2max}, leicht steigend → Ausdauer entwickelt sich gut. Halte den Zone-2-Anteil hoch.\n\n(Demo – mit Claude-Key in ⚙ echte KI-Prognose.)`;
-  if(type==="pattern") return `Muster (Demo)\n\n• Nach < 7 h Schlaf liegt deine Erholung im Schnitt spürbar niedriger – Schlaf ist dein größter Recovery-Hebel.\n• Deine Woche hat ${min} Trainingsminuten; die freien Tage (Di, Sa) sind gut verteilt und stützen die Erholung.\n• Protein liegt oft unter Ziel (${state.macros.protein.v}/${state.macros.protein.t} g) – hier verschenkst du Muskelaufbau.\n\n(Demo – mit Claude-Key echte Muster-Analyse.)`;
-  return `Wochen-Report (Demo)\n\nGut: ${min} Trainingsminuten, Streak ${state.streak.count} Tage, VO2max ${state.metrics.vo2max}.\nWeniger gut: Protein unter Ziel; Gewicht ${delta} kg/30 T (Richtung stimmt).\nMuster: Erholung folgt dem Schlaf.\n\nZiele nächste Woche:\n1. Protein an 6/7 Tagen ≥ ${state.macros.protein.t} g\n2. 2× Zone-2-Cardio à 30 min\n3. An 5 Tagen ≥ 8.000 Schritte\n\n(Demo – mit Claude-Key echter KI-Report.)`; }
+function mdToHtml(md){ const lines=md.split("\n"); let h="",inList=false; const close=()=>{ if(inList){h+="</ul>";inList=false;} };
+  lines.forEach(raw=>{ const l=raw.trim(); if(!l){ close(); return; }
+    if(/^#{1,3}\s/.test(l)){ close(); h+=`<div class="an-h">${esc(l.replace(/^#{1,3}\s/,""))}</div>`; }
+    else if(/^\d+[.)]\s/.test(l)||/^[-•*]\s/.test(l)){ if(!inList){h+='<ul class="an-list">';inList=true;} h+=`<li>${esc(l.replace(/^(\d+[.)]|[-•*])\s/,""))}</li>`; }
+    else { close(); h+=`<p class="an-p">${esc(l)}</p>`; } });
+  close(); return h; }
+function objToHtml(o){ let h=`<div class="an-title">${esc(o.title)}</div>`;
+  (o.sections||[]).forEach(s=>{ h+=`<div class="an-sec"><div class="an-h">${esc(s.h)}</div><ul class="an-list">${s.items.filter(Boolean).map(it=>`<li>${esc(it)}</li>`).join("")}</ul></div>`; });
+  if(o.note) h+=`<div class="an-note">${esc(o.note)}</div>`; return h; }
+const DEMO="Demo – für echte KI-Analyse Claude-Key in den Einstellungen (⚙) hinterlegen.";
+const ANALYSES=[
+ {id:"week",label:"Wochen-Report",instr:"Erstelle einen kompakten Wochen-Report: was lief gut, was nicht, und drei konkrete Ziele für nächste Woche.",demo(){ const min=state.week.reduce((a,w)=>a+w.min,0),wh=state.weightHistory,delta=(wh[wh.length-1]-wh[0]).toFixed(1);
+   return {title:"Wochen-Report",sections:[
+    {h:"Lief gut",items:[`${min} Trainingsminuten`,`Streak ${state.streak.count} Tage am Stück`,`VO₂max ${state.metrics.vo2max} – stabil`]},
+    {h:"Baustellen",items:[`Protein ${state.macros.protein.v}/${state.macros.protein.t} g – oft unter Ziel`,`Gewicht ${delta} kg/30 T – Richtung stimmt, Tempo langsam`]},
+    {h:"Ziele nächste Woche",items:["Protein an 6/7 Tagen ≥ Ziel","2× Zone-2-Cardio à 30 min","An 5 Tagen ≥ 8.000 Schritte"]}],note:DEMO}; }},
+ {id:"pattern",label:"Muster finden",instr:"Finde 2–3 konkrete Muster/Zusammenhänge in meinen Daten (Schlaf↔Erholung, Training↔Recovery, Protein↔Ziel).",demo(){ const min=state.week.reduce((a,w)=>a+w.min,0);
+   return {title:"Muster & Zusammenhänge",sections:[
+    {h:"Erkenntnisse",items:["Unter 7 h Schlaf → Erholung im Schnitt niedriger","Freie Tage (Di, Sa) stützen die Erholung",`Protein oft unter Ziel (${state.macros.protein.v}/${state.macros.protein.t} g) bremst Muskelaufbau`]},
+    {h:"Hebel",items:["Schlaf ist dein größter Recovery-Hebel",`${min} Wochenminuten – Verteilung ist gut`]}],note:DEMO}; }},
+ {id:"forecast",label:"Prognose",instr:"Gib eine realistische Prognose mit Zahlen: Wann erreiche ich mein Zielgewicht bei diesem Trend? Wie entwickelt sich die Ausdauer?",demo(){ const wh=state.weightHistory,cur=wh[wh.length-1],delta=(cur-wh[0]).toFixed(1),toGo=(cur-state.targetWeight).toFixed(1),mon=Math.max(1,Math.round(Math.abs(toGo)/Math.max(0.1,Math.abs(delta))));
+   return {title:"Prognose",sections:[
+    {h:"Gewicht",items:[`Aktuell ${cur} kg, Trend ${delta} kg/30 T`,`Bis Ziel ${state.targetWeight} kg fehlen ${toGo} kg`,`Bei dem Tempo ca. ${mon} Monate`]},
+    {h:"Ausdauer",items:[`VO₂max ${state.metrics.vo2max}, leicht steigend`,"Zone-2-Anteil hoch halten"]}],note:DEMO}; }},
+ {id:"sleep",label:"Schlaf & Erholung",instr:"Analysiere Schlaf und Erholung und gib eine klare Trainings-Empfehlung für heute.",demo(){ const s=state.sleep,r=state.recovery;
+   return {title:"Schlaf & Erholung",sections:[
+    {h:"Status",items:[`Schlaf-Score ${s.score} (${s.hours} h)`,`Tief ${s.deep}% · REM ${s.rem}%`,`Erholung ${r.score}% · HRV ${r.hrv} · Ruhepuls ${r.rhr}`]},
+    {h:"Empfehlung",items:[s.score>=75?"Schlaf sitzt – so weiter":"Heute früher ins Bett – größter Hebel",r.score>=67?"Grünes Licht für hartes Training":r.score>=34?"Moderat trainieren, Qualität vor Menge":"Heute regenerieren"]}],note:DEMO}; }},
+ {id:"nutrition",label:"Ernährung",instr:"Analysiere meine heutige Ernährung (Kalorien/Makros) und gib einen konkreten Tipp.",demo(){ const kL=state.calories.target-state.calories.consumed,pL=state.macros.protein.t-state.macros.protein.v;
+   return {title:"Ernährung heute",sections:[
+    {h:"Stand",items:[`Kalorien ${state.calories.consumed}/${state.calories.target} (noch ${kL})`,`Protein ${state.macros.protein.v}/${state.macros.protein.t} g (noch ${Math.max(0,pL)})`,`KH ${state.macros.carbs.v}/${state.macros.carbs.t} g · Fett ${state.macros.fat.v}/${state.macros.fat.t} g`]},
+    {h:"Tipp",items:[pL>0?`Noch ${pL} g Protein: ${mealSuggestion(pL)}`:"Protein im grünen Bereich","Ziel ~2 g Protein pro kg Körpergewicht"]}],note:DEMO}; }},
+ {id:"training",label:"Training-Balance",instr:"Bewerte meine Trainingsbalance über den Monat: welche Muskelgruppen kommen zu kurz? Gib eine Empfehlung.",demo(){ const e=Object.entries(state.muscleMonth||{}).sort((a,b)=>b[1]-a[1]),top=e.slice(0,3),low=e.slice(-3).reverse();
+   return {title:"Training-Balance (Monat)",sections:[
+    {h:"Viel trainiert",items:top.map(([m,c])=>`${m}: ${c}×`)},
+    {h:"Vernachlässigt",items:low.map(([m,c])=>`${m}: ${c}×`)},
+    {h:"Empfehlung",items:[`Fokus auf ${low[0]?low[0][0]:"—"} & ${low[1]?low[1][0]:"—"}`,"Jede Gruppe 1–2×/Woche treffen"]}],note:DEMO}; }},
+ {id:"focus",label:"Nächster Schritt",instr:"Was ist mein wichtigster nächster Schritt heute? Nenne 2–3 konkrete Aktionen.",demo(){ const pL=state.macros.protein.t-state.macros.protein.v,r=state.recovery.score;
+   return {title:"Nächster Schritt",sections:[
+    {h:"Jetzt wichtig",items:[r>=67?"Heute hart trainieren – Erholung erlaubt es":r>=34?"Moderates Workout, Qualität vor Menge":"Regeneration priorisieren",pL>0?`Noch ${pL} g Protein auffüllen`:"Protein passt",`${state.metrics.steps.toLocaleString("de-DE")} Schritte – ${state.metrics.steps>=8000?"Ziel erreicht":"noch etwas bewegen"}`]}],note:DEMO}; }}
+];
 
 function renderGoals(){ const list=document.getElementById("goalList");
   if(!state.goals.length) list.innerHTML=`<div class="empty-hint">Noch keine Ziele – füg oben eins hinzu.</div>`;
@@ -758,12 +801,17 @@ async function enableReminders(){ if(!("Notification" in window)){ alert("Dieser
 document.getElementById("remEnable").addEventListener("click",enableReminders);
 document.getElementById("remTest").addEventListener("click",()=>{ if(state.reminders.enabled) notify("🔔 Elite Coach","So sehen deine Erinnerungen aus."); else enableReminders(); });
 /* KI-Analyse */
-async function runAnalysis(title,type,instruction){ document.getElementById("analysisTitle").textContent=title; const body=document.getElementById("analysisBody"); body.textContent="Analysiere…"; open("analysisOverlay");
-  try{ body.textContent=await aiAnalyze(type,instruction); } catch(e){ body.textContent="⚠️ "+e.message; } }
-document.getElementById("anWeek").addEventListener("click",()=>runAnalysis("Wochen-Report","week","Erstelle einen kompakten Wochen-Report auf Deutsch: 1) Was lief gut, 2) was nicht, 3) erkennbare Muster, 4) drei konkrete Ziele für nächste Woche. Nutze konkrete Zahlen aus den Daten. Kurz und ohne Floskeln."));
-document.getElementById("anPattern").addEventListener("click",()=>runAnalysis("Muster","pattern","Finde 2–3 konkrete Muster oder Zusammenhänge in meinen Daten (z. B. Schlaf↔Erholung, Trainingsbelastung↔Recovery, Protein↔Ziel). Als kurze Erkenntnisse mit Zahlen."));
-document.getElementById("anForecast").addEventListener("click",()=>runAnalysis("Prognose","forecast","Gib eine kurze, realistische Prognose mit Zahlen: Wann erreiche ich bei diesem Gewichtstrend mein Zielgewicht? Wie entwickelt sich meine Ausdauer/VO2max? Was sollte ich anpassen?"));
-document.getElementById("analysisClose").addEventListener("click",()=>close("analysisOverlay"));
+function renderAnChips(){ const el=document.getElementById("anChips");
+  el.innerHTML=ANALYSES.map(a=>`<button class="btn small" data-an="${a.id}"><i class="mk"></i>${a.label}</button>`).join("");
+  el.querySelectorAll("[data-an]").forEach(b=>b.addEventListener("click",()=>runAnalysis(b.dataset.an))); }
+async function runAnalysis(id){ const a=ANALYSES.find(x=>x.id===id); if(!a) return;
+  document.querySelectorAll("#anChips [data-an]").forEach(b=>b.classList.toggle("on",b.dataset.an===id));
+  const res=document.getElementById("anResult");
+  if(!state.apiKey){ res.innerHTML=objToHtml(a.demo()); return; }
+  res.innerHTML='<div class="an-loading">Analysiere…</div>';
+  try{ const md=await aiAnalyzeText(a.instr); res.innerHTML=`<div class="an-title">${esc(a.label)}</div>`+mdToHtml(md); }
+  catch(e){ res.innerHTML=`<div class="an-note">⚠️ ${esc(e.message)}</div>`; } }
+renderAnChips();
 /* Barcode / Open Food Facts */
 let barcodeProduct=null,scanStream=null,scanTimer=null;
 async function lookupBarcode(code){ code=(code||"").trim(); const r=document.getElementById("barcodeResult"); if(!code){ r.innerHTML=""; return; }
