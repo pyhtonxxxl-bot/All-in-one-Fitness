@@ -540,7 +540,7 @@ const BODY_BACK=`<svg class="body-svg" viewBox="0 0 200 400" xmlns="http://www.w
 <g clip-path="url(#clipBk)">${M_BACK}</g>
 </svg>`;
 const NAVY="#2E5490";
-function heatColor(t){ t=Math.max(0,Math.min(1,t)); const lo=[0x23,0x35,0x50],hi=[0x66,0x99,0xdd];
+function heatColor(t){ t=Math.max(0,Math.min(1,t)); const lo=[0x1b,0x33,0x5c],hi=[0x8c,0xb4,0xea];
   const c=lo.map((v,i)=>Math.round(v+(hi[i]-v)*t)); return `rgb(${c[0]},${c[1]},${c[2]})`; }
 function renderBody(){ const month=state.bodyMode==="month";
   document.getElementById("bodyMap").innerHTML=(state.view==="back"?BODY_BACK:BODY_SVG);
@@ -549,14 +549,14 @@ function renderBody(){ const month=state.bodyMode==="month";
   const max=Math.max(1,...Object.values(state.muscleMonth||{}));
   document.querySelectorAll("#bodyMap .muscle").forEach(el=>{ const m=el.dataset.m;
     if(month){ const c=(state.muscleMonth&&state.muscleMonth[m])||0;
-      if(c){ el.style.fill=heatColor(c/max); el.style.opacity=1; } else { el.style.fill="#fff"; el.style.opacity=0.09; } }
+      if(c){ el.style.fill=heatColor(1-c/max); el.style.opacity=1; } else { el.style.fill="#fff"; el.style.opacity=0.09; } }
     else { const on=(state.muscleToday||[]).includes(m);
       el.style.fill=on?NAVY:"#fff"; el.style.opacity=on?1:0.16; }
     el.onclick=()=>selectMuscle(m); });
   document.getElementById("bodyCaption").textContent=month?"Monatsansicht – Farbe zeigt, wie oft du den Muskel diesen Monat trainiert hast.":"Tippe eine Muskelgruppe an.";
   const lg=document.getElementById("bodyLegend");
   if(lg){ lg.innerHTML=month
-    ? `weniger<i style="background:${heatColor(.12)}"></i><i style="background:${heatColor(.4)}"></i><i style="background:${heatColor(.7)}"></i><i style="background:${heatColor(1)}"></i>mehr · diesen Monat`
+    ? `weniger<i style="background:${heatColor(.88)}"></i><i style="background:${heatColor(.6)}"></i><i style="background:${heatColor(.3)}"></i><i style="background:${heatColor(0)}"></i>mehr · diesen Monat`
     : `<i style="background:${NAVY};opacity:1"></i>heute trainiert`; } }
 function selectMuscle(m){ let txt;
   if(state.bodyMode==="month"){ const c=(state.muscleMonth&&state.muscleMonth[m])||0; txt=c?`${c}× diesen Monat trainiert`:"diesen Monat noch nicht trainiert"; }
