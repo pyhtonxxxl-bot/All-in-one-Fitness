@@ -832,9 +832,10 @@ async function enableReminders(){ if(!("Notification" in window)){ alert("Dieser
 document.getElementById("remEnable").addEventListener("click",enableReminders);
 document.getElementById("remTest").addEventListener("click",()=>{ if(state.reminders.enabled) notify("🔔 Elite Coach","So sehen deine Erinnerungen aus."); else enableReminders(); });
 /* KI-Analyse */
+function closeAnalysis(){ document.getElementById("anResult").innerHTML=""; document.querySelectorAll("#anChips [data-an]").forEach(b=>b.classList.remove("on")); }
 function renderAnChips(){ const el=document.getElementById("anChips");
   el.innerHTML=ANALYSES.map(a=>`<button class="btn small" data-an="${a.id}"><i class="mk"></i>${a.label}</button>`).join("");
-  el.querySelectorAll("[data-an]").forEach(b=>b.addEventListener("click",()=>runAnalysis(b.dataset.an))); }
+  el.querySelectorAll("[data-an]").forEach(b=>b.addEventListener("click",()=>{ if(b.classList.contains("on")) closeAnalysis(); else runAnalysis(b.dataset.an); })); }
 async function runAnalysis(id){ const a=ANALYSES.find(x=>x.id===id); if(!a) return;
   document.querySelectorAll("#anChips [data-an]").forEach(b=>b.classList.toggle("on",b.dataset.an===id));
   const res=document.getElementById("anResult");
