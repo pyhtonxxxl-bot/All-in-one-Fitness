@@ -517,8 +517,8 @@ function renderRings(){ const kL=Math.max(0,Math.round(state.calories.target-sta
   const blocks=[
     {key:"sleep",label:"Schlaf",svg:ringSVG(state.sleep.score/100,"g_sleep"),center:`<div class="ring-num">${state.sleep.score}</div><div class="ring-unit">Score</div>`},
     {key:"recovery",label:"Erholung",svg:ringSVG(state.recovery.score/100,"g_recovery"),center:`<div class="ring-num">${state.recovery.score}%</div><div class="ring-unit">Recovery</div>`},
-    {key:"calories",label:"Kalorien",svg:ringSVGCal(state.calories.consumed/state.calories.target, state.macros.protein.v/state.macros.protein.t),center:`<div class="ring-num">${state.calories.consumed}</div><div class="ring-unit">kcal</div><div class="ring-prot">${state.macros.protein.v} g P</div>`}];
-  document.getElementById("rings").innerHTML=blocks.map(b=>`<div class="ring-block${b.key==="calories"?" cal":""}" data-ring="${b.key}"><div class="ring-wrap">${b.svg}<div class="ring-value"><div>${b.center}</div></div></div><div class="ring-label">${b.label}</div></div>`).join("");
+    {key:"calories",label:"Kalorien",svg:ringSVG(state.calories.consumed/state.calories.target,"g_calories"),center:`<div class="ring-num">${state.calories.consumed}</div><div class="ring-unit">kcal</div>`}];
+  document.getElementById("rings").innerHTML=blocks.map(b=>`<div class="ring-block" data-ring="${b.key}"><div class="ring-wrap">${b.svg}<div class="ring-value"><div>${b.center}</div></div></div><div class="ring-label">${b.label}</div></div>`).join("");
   document.querySelectorAll(".ring-block").forEach(el=>el.addEventListener("click",()=>ringDetail(el.dataset.ring))); }
 function ringDetail(k){ const d={sleep:`Schlaf-Score ${state.sleep.score}/100\nDauer ${state.sleep.hours} h · Tief ${state.sleep.deep}% · REM ${state.sleep.rem}%`,
   recovery:`Erholung ${state.recovery.score}%\nHRV ${state.recovery.hrv} ms · Ruhepuls ${state.recovery.rhr} bpm`,

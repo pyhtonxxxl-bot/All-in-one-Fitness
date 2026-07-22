@@ -1,0 +1,77 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Protein anzeigen – Vorschläge</title>
+<style>
+:root{--bg:#0A0A0C;--card:rgba(255,255,255,0.03);--tp:#F7F7F8;--ts:#9A9A9F;--tt:#5C5C61;--hair:rgba(255,255,255,0.09);--track:rgba(255,255,255,.14);
+ --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;--num:-apple-system,"SF Pro Display","Inter",system-ui,sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tp);font-family:var(--font);padding:24px 16px 50px;max-width:460px;margin:0 auto}
+h2{font-family:var(--num);font-size:20px;font-weight:700;letter-spacing:-.02em}
+.hint{color:var(--tt);font-size:12.5px;margin:6px 0 18px;line-height:1.5}
+.opt-name{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#0B0B0C;background:#F2F2F3;padding:5px 10px;border-radius:7px;margin:24px 0 10px}
+.card{background:var(--card);border:1px solid var(--hair);border-radius:18px;padding:18px}
+.pbar{height:9px;border-radius:999px;background:var(--track);overflow:hidden}
+.pbar>i{display:block;height:100%;background:#EDEDEE;border-radius:999px}
+.rowline{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;margin-bottom:8px}
+.rowline b{font-weight:600}.rowline span{color:var(--tt);font-family:var(--num)}
+.rings4{display:flex;justify-content:space-between;gap:8px}
+.rb{display:flex;flex-direction:column;align-items:center;gap:7px;flex:1}
+.rb svg{width:100%;max-width:78px;aspect-ratio:1}
+.rb .n{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--num);font-weight:700;font-size:15px}
+.rw{position:relative;width:100%;max-width:78px;margin:0 auto;display:grid;place-items:center}
+.rl{font-size:11px;color:var(--ts)}
+.tile{display:inline-flex;align-items:center;gap:11px;border:1px solid var(--hair);background:rgba(255,255,255,.04);border-radius:14px;padding:10px 14px}
+.tile .tv{font-family:var(--num);font-weight:700;font-size:16px}.tile .tl{font-size:11px;color:var(--tt)}
+.chips{display:flex;gap:8px}
+.chip{flex:1;border:1px solid var(--hair);background:rgba(255,255,255,.04);border-radius:12px;padding:10px 11px}
+.chip .cl{font-size:10px;color:var(--tt);text-transform:uppercase;letter-spacing:.06em}.chip .cv{font-family:var(--num);font-weight:700;font-size:15px;margin:4px 0 7px}
+.chip .cb{height:5px;border-radius:999px;background:var(--track);overflow:hidden}.chip .cb>i{display:block;height:100%;background:#EDEDEE}
+.seg{height:14px;border-radius:999px;overflow:hidden;display:flex}
+.seg>span{display:block;height:100%}
+.seglab{display:flex;justify-content:space-between;font-size:11px;color:var(--tt);margin-top:8px}
+.ringlab{font-size:13px;color:var(--ts);text-align:center;margin-top:8px}
+.ringsub{font-size:11.5px;color:var(--tt);text-align:center;margin-top:2px}
+.big-num{font-family:var(--num);font-weight:700}
+</style></head><body>
+<h2>Protein anzeigen – Vorschläge</h2>
+<div class="hint">Protein ist wieder aus dem Kalorien-Kreis raus (der ist jetzt clean). Hier 6 saubere Wege, Protein trotzdem gut sichtbar zu machen. Sag mir die Nummer(n).</div>
+
+<span class="opt-name">1 · Balken unter den Ringen</span>
+<div class="card">
+  <div class="rowline"><b>Protein</b><span>118 / 175 g · noch 57 g</span></div>
+  <div class="pbar"><i style="width:67%"></i></div>
+</div>
+
+<span class="opt-name">2 · Vierter Ring (Protein als eigener Kreis)</span>
+<div class="card"><div class="rings4" id="rings4"></div></div>
+
+<span class="opt-name">3 · Kleine Kachel (z. B. neben den Ringen)</span>
+<div class="card"><div class="tile"><div class="rw" style="max-width:40px"><svg id="miniring" viewBox="0 0 40 40"></svg></div><div><div class="tv">118 <span style="color:var(--tt);font-size:12px;font-weight:400">/ 175 g</span></div><div class="tl">Protein · noch 57 g</div></div></div></div>
+
+<span class="opt-name">4 · Unter dem Kalorien-Ring</span>
+<div class="card"><div class="rw" style="max-width:96px"><svg id="calring" viewBox="0 0 40 40"></svg><div class="n" style="font-size:17px">1840</div></div>
+  <div class="ringlab">Kalorien</div><div class="ringsub">Protein 118 / 175 g</div></div>
+
+<span class="opt-name">5 · Makro-Chips (Protein, KH, Fett)</span>
+<div class="card"><div class="chips">
+  <div class="chip"><div class="cl">Protein</div><div class="cv">118 g</div><div class="cb"><i style="width:67%"></i></div></div>
+  <div class="chip"><div class="cl">Kohlenhydr.</div><div class="cv">190 g</div><div class="cb"><i style="width:68%"></i></div></div>
+  <div class="chip"><div class="cl">Fett</div><div class="cv">58 g</div><div class="cb"><i style="width:73%"></i></div></div>
+</div></div>
+
+<span class="opt-name">6 · Makro-Balken (ein Balken, aufgeteilt)</span>
+<div class="card">
+  <div class="seg"><span style="width:33%;background:#F4F4F5"></span><span style="width:47%;background:#9a9aa0"></span><span style="width:20%;background:#5c5c61"></span></div>
+  <div class="seglab"><span>■ Protein 118 g</span><span>■ KH 190 g</span><span>■ Fett 58 g</span></div>
+</div>
+
+<script>
+const cl=x=>Math.min(Math.max(x,0),1);
+function ring(el,pct,color,w){ const s=40,r=(s-w)/2,c=2*Math.PI*r,o=c*(1-cl(pct));
+  el.innerHTML=`<g transform="rotate(-90 20 20)"><circle cx="20" cy="20" r="${r}" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="${w}"/><circle cx="20" cy="20" r="${r}" fill="none" stroke="${color}" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${o}"/></g>`; }
+// 4 rings
+const R=[["Schlaf",.82,"#EDEDEE","82"],["Erholung",.64,"#EDEDEE","64%"],["Kalorien",.69,"#EDEDEE","1840"],["Protein",.67,"#EDEDEE","118g"]];
+document.getElementById("rings4").innerHTML=R.map((r,i)=>`<div class="rb"><div class="rw"><svg id="r4_${i}" viewBox="0 0 40 40"></svg><div class="n" style="font-size:${r[3].length>3?11:13}px">${r[3]}</div></div><div class="rl">${r[0]}</div></div>`).join("");
+R.forEach((r,i)=>ring(document.getElementById("r4_"+i),r[1],r[2],4.4));
+ring(document.getElementById("miniring"),.67,"#EDEDEE",5);
+ring(document.getElementById("calring"),.69,"#EDEDEE",5);
+</script>
+</body></html>
