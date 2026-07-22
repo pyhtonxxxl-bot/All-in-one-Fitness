@@ -399,6 +399,11 @@
       <div class="note">Apple Watch (Training, Schlaf, Puls) &amp; Yazio (über Apple Health) → hier rein. Auf dem iPhone: Health-App → Profil → „Alle Gesundheitsdaten exportieren", ZIP entpacken, dann die <b>export.xml</b> hier auswählen.</div>
       <div class="coach-actions" style="margin-top:8px;"><label class="btn small" style="cursor:pointer;">Datei wählen<input type="file" id="healthFile" accept=".xml,text/xml" style="display:none;" /></label></div>
       <div class="note" id="healthNote"></div>
+      <div class="field-label">Auto-Sync (Apple Health → Server → App)</div>
+      <input class="input" id="syncUrlField" placeholder="Sync-URL (https://…)" style="width:100%;" />
+      <input class="input" id="syncKeyField" placeholder="Token (optional)" style="width:100%;margin-top:8px;" />
+      <div class="coach-actions" style="margin-top:8px;"><button class="btn small" id="syncBtn">Jetzt synchronisieren</button></div>
+      <div class="note" id="syncNote">Holt automatisch Werte von deiner Server-Adresse (dein iPhone schickt sie dorthin – Anleitung im Chat). Aktualisiert sich beim Öffnen und alle paar Minuten.</div>
       <div class="field-label">Erinnerungen</div>
       <div class="coach-actions" style="margin-top:0;"><button class="btn small" id="remEnable">Aktivieren</button><button class="btn small" id="remTest">Test</button></div>
       <div class="note" id="remNote">Erinnerungen an Protein & Schlaf – laufen, solange die App/der Browser-Tab offen ist. Für feste Zeiten (z. B. 6:00 Uhr) unabhängig vom Tab braucht es die installierte iOS-App oder ein Backend.</div>
@@ -475,7 +480,7 @@ function seedState() {
     coachMessage:"",
     goalsDay:new Date().toDateString(),
     goals:[],
-    chat:[], apiKey:""
+    chat:[], apiKey:"", syncUrl:"", syncKey:""
   };
 }
 let state = load();
@@ -486,6 +491,7 @@ function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return seedS
   s.trainedDays=s.trainedDays||d.trainedDays; s.reminders=s.reminders||d.reminders; s.targetWeight=s.targetWeight||d.targetWeight;
   s.view=s.view||"front"; s.bodyMode=s.bodyMode||"today"; s.muscleToday=s.muscleToday||d.muscleToday; s.muscleMonth=Object.assign({},d.muscleMonth,s.muscleMonth||{});
   s.goals=(s.goals||d.goals).map(g=>({repeat:false,...g})); s.goalsDay=s.goalsDay||d.goalsDay;
+  s.syncUrl=s.syncUrl||""; s.syncKey=s.syncKey||"";
   const today=new Date().toDateString(); if(s.goalsDay!==today){ s.goalsDay=today; s.goals=s.goals.filter(g=>g.repeat); s.goals.forEach(g=>g.done=false); }
   return s;
 } catch { return seedState(); } }
@@ -819,10 +825,12 @@ document.getElementById("goalRepeatBtn").addEventListener("click",e=>e.currentTa
 document.getElementById("goalAddBtn").addEventListener("click",()=>{ const i=document.getElementById("goalInput"); addGoal(i.value); i.value=""; });
 document.getElementById("goalInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ addGoal(e.target.value); e.target.value=""; } });
 document.getElementById("settingsBtn").addEventListener("click",()=>{ document.getElementById("apiKeyField").value=state.apiKey||"";
+  document.getElementById("syncUrlField").value=state.syncUrl||""; document.getElementById("syncKeyField").value=state.syncKey||"";
   document.getElementById("setGlass").value=state.glass; document.getElementById("setKcal").value=state.calories.target;
   document.getElementById("setProtein").value=state.macros.protein.t; document.getElementById("setCarbs").value=state.macros.carbs.t; document.getElementById("setFat").value=state.macros.fat.t; open("settingsOverlay"); });
 document.getElementById("settingsClose").addEventListener("click",()=>close("settingsOverlay"));
 document.getElementById("settingsSave").addEventListener("click",()=>{ state.apiKey=document.getElementById("apiKeyField").value.trim();
+  state.syncUrl=document.getElementById("syncUrlField").value.trim(); state.syncKey=document.getElementById("syncKeyField").value.trim();
   state.glass=Number(document.getElementById("setGlass").value)||2; state.calories.target=Number(document.getElementById("setKcal").value)||state.calories.target;
   state.macros.protein.t=Number(document.getElementById("setProtein").value)||state.macros.protein.t;
   state.macros.carbs.t=Number(document.getElementById("setCarbs").value)||state.macros.carbs.t;
@@ -869,6 +877,27 @@ async function importHealth(file){ const note=document.getElementById("healthNot
   if(!found.length){ note.textContent="Keine passenden Daten gefunden. Prüfe, ob in der Health-App die Quellen (Watch/Yazio) Daten liefern."; return; }
   state.coachMessage=""; save(); renderAll(); note.innerHTML="✓ Importiert: "+esc(found.join(" · "))+".<br>Recovery-/Schlaf-Score sind Schätzungen (liefert Apple Health nicht direkt)."; }
 document.getElementById("healthFile").addEventListener("change",e=>{ const f=e.target.files[0]; if(f) importHealth(f); e.target.value=""; });
+/* Auto-Sync (Weg 2): Werte von der Server-Adresse holen */
+function applySync(d){ if(!d||typeof d!=="object") return 0; let n=0;
+  if(d.sleep){ if(d.sleep.hours!=null){state.sleep.hours=d.sleep.hours;n++;} if(d.sleep.deep!=null)state.sleep.deep=Math.round(d.sleep.deep); if(d.sleep.rem!=null)state.sleep.rem=Math.round(d.sleep.rem);
+    if(d.sleep.score!=null)state.sleep.score=Math.round(d.sleep.score); else if(d.sleep.hours!=null)state.sleep.score=Math.min(100,Math.round(d.sleep.hours/8*100)); }
+  if(d.recovery){ if(d.recovery.hrv!=null){state.recovery.hrv=Math.round(d.recovery.hrv);n++;} if(d.recovery.rhr!=null)state.recovery.rhr=Math.round(d.recovery.rhr); if(d.recovery.score!=null)state.recovery.score=Math.round(d.recovery.score); }
+  if(d.steps!=null){state.metrics.steps=Math.round(d.steps);n++;}
+  if(d.activeKcal!=null){state.metrics.activeKcal=Math.round(d.activeKcal);n++;}
+  if(d.vo2max!=null){state.metrics.vo2max=Math.round(d.vo2max*10)/10;n++;}
+  if(d.weight!=null){const w=Math.round(d.weight*10)/10;state.metrics.weight=w;state.weightHistory=state.weightHistory.slice(1).concat(w);n++;}
+  if(d.nutrition){const u=d.nutrition; if(u.kcal!=null){state.calories.consumed=Math.round(u.kcal);n++;} if(u.protein!=null)state.macros.protein.v=Math.round(u.protein); if(u.carbs!=null)state.macros.carbs.v=Math.round(u.carbs); if(u.fat!=null)state.macros.fat.v=Math.round(u.fat);}
+  if(d.training){const t=d.training; if(t.type){state.training.type=t.type;n++;} if(t.duration!=null)state.training.duration=Math.round(t.duration); if(t.kcal!=null)state.training.kcal=Math.round(t.kcal); if(t.avgHr!=null)state.training.avgHr=Math.round(t.avgHr); state.training.when="Automatisch synchronisiert";}
+  if(n) state.coachMessage=""; return n; }
+async function syncNow(manual){ const note=document.getElementById("syncNote");
+  if(!state.syncUrl){ if(manual&&note) note.textContent="Bitte zuerst eine Sync-URL eintragen."; return; }
+  if(manual&&note) note.textContent="Synchronisiere …";
+  try{ const h={}; if(state.syncKey) h["Authorization"]="Bearer "+state.syncKey;
+    const res=await fetch(state.syncUrl,{headers:h,cache:"no-store"}); if(!res.ok) throw new Error("HTTP "+res.status);
+    const d=await res.json(); const n=applySync(d); save(); renderAll();
+    if(note) note.textContent=(n?"✓ Aktualisiert · ":"Verbunden, keine Werte · ")+new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}); }
+  catch(e){ if(note) note.textContent="⚠️ "+e.message; } }
+document.getElementById("syncBtn").addEventListener("click",()=>{ state.syncUrl=document.getElementById("syncUrlField").value.trim(); state.syncKey=document.getElementById("syncKeyField").value.trim(); save(); syncNow(true); });
 document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{ if(e.target===o) o.classList.remove("open"); }));
 
 function renderAll(){ renderRings(); renderBody(); renderMacros(); renderTraining(); renderStreak(); renderMonth(); renderTiles(); renderGoals(); renderCoach(); }
@@ -952,7 +981,8 @@ if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.se
 
 function init(){ const g=new URLSearchParams(location.search).get("glass"); if(g==="1"||g==="2"||g==="3") state.glass=Number(g);
   applyGlass(); document.getElementById("dateLine").textContent=new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"});
-  renderAll(); Ticker.start(); if(state.reminders.enabled) scheduleReminders(); }
+  renderAll(); Ticker.start(); if(state.reminders.enabled) scheduleReminders();
+  if(state.syncUrl){ syncNow(false); setInterval(()=>{ if(state.syncUrl && !document.hidden) syncNow(false); },300000); } }
 init();
 </script>
 </body>
