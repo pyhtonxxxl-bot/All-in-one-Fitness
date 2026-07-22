@@ -474,8 +474,8 @@ function seedState() {
     reminders:{enabled:false},
     coachMessage:"",
     goalsDay:new Date().toDateString(),
-    goals:[{id:uid(),text:"Ernährung in Yazio loggen",done:true,repeat:true},{id:uid(),text:"Proteinziel erreichen (175 g)",done:false,repeat:true},
-      {id:uid(),text:"Zone-2 Cardio, 30 min",done:false,repeat:false},{id:uid(),text:"Vor 23:00 im Bett",done:false,repeat:true}],
+    goals:[{id:uid(),text:"Ernährung loggen",done:false,repeat:true},{id:uid(),text:"Proteinziel erreichen (175 g)",done:false,repeat:true},
+      {id:uid(),text:"Vor 23:00 im Bett",done:false,repeat:true}],
     chat:[], apiKey:""
   };
 }
@@ -487,7 +487,7 @@ function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return seedS
   s.trainedDays=s.trainedDays||d.trainedDays; s.reminders=s.reminders||d.reminders; s.targetWeight=s.targetWeight||d.targetWeight;
   s.view=s.view||"front"; s.bodyMode=s.bodyMode||"today"; s.muscleToday=s.muscleToday||d.muscleToday; s.muscleMonth=Object.assign({},d.muscleMonth,s.muscleMonth||{});
   s.goals=(s.goals||d.goals).map(g=>({repeat:false,...g})); s.goalsDay=s.goalsDay||d.goalsDay;
-  const today=new Date().toDateString(); if(s.goalsDay!==today){ s.goalsDay=today; s.goals.forEach(g=>{ if(g.repeat) g.done=false; }); }
+  const today=new Date().toDateString(); if(s.goalsDay!==today){ s.goalsDay=today; s.goals=s.goals.filter(g=>g.repeat); s.goals.forEach(g=>g.done=false); }
   return s;
 } catch { return seedState(); } }
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
