@@ -89,7 +89,8 @@
 
   /* Ticker */
   .ticker-row { margin: 2px 0 16px; }
-  .goal-ticker { display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 14px; position: relative; overflow: hidden; }
+  .goal-ticker { display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 14px; position: relative; overflow: hidden; cursor: pointer; -webkit-user-select: none; user-select: none; transition: background .18s; }
+  .goal-ticker:active { background: rgba(255,255,255,0.04); }
   .goal-ticker-led-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-hi); box-shadow: 0 0 8px rgba(255,255,255,0.55); animation: pulse 1.8s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(.82); } }
   .goal-ticker-label { font-size: 10px; font-weight: 700; letter-spacing: 0.16em; color: var(--text-tertiary); }
@@ -652,7 +653,7 @@ function addGoal(t){ t=t.trim(); if(!t) return; const rb=document.getElementById
 function toggleGoal(id){ const g=state.goals.find(x=>x.id===id); if(g) g.done=!g.done; renderGoals(); }
 function deleteGoal(id){ state.goals=state.goals.filter(x=>x.id!==id); renderGoals(); }
 
-const Ticker=(()=>{ const stage=document.getElementById("goalTickerStage"),meta=document.getElementById("goalTickerMeta"); let i=0,first=true;
+const Ticker=(()=>{ const stage=document.getElementById("goalTickerStage"),meta=document.getElementById("goalTickerMeta"),root=document.getElementById("goalTicker"); let i=0,first=true,timer=null;
   const build=()=>{ const g=state.goals,total=g.length,done=g.filter(x=>x.done).length; let items;
     if(!total) items=[{s:"empty",t:"Keine Ziele heute – füg eins hinzu."}]; else if(done===total) items=[{s:"done",t:"✓ Alle Ziele erledigt – starker Tag."}];
     else items=g.filter(x=>!x.done).map(x=>({s:"pending",t:x.text})); return{items,done,total}; };
@@ -661,7 +662,10 @@ const Ticker=(()=>{ const stage=document.getElementById("goalTickerStage"),meta=
     const old=stage.querySelector(".goal-ticker-row"),row=document.createElement("div"); row.className="goal-ticker-row"+(first?"":" is-entering");
     row.innerHTML=`<span class="goal-ticker-status">${gl(it.s)}</span><span class="goal-ticker-text">${esc(it.t)}</span>`;
     if(old&&!first){ old.classList.add("is-leaving"); setTimeout(()=>old.remove(),460); } else if(old) old.remove(); stage.appendChild(row); i++; first=false; };
-  window.addEventListener("goals-changed",()=>{ i=0; tick(); }); return { start:()=>{ tick(); setInterval(tick,5000); } }; })();
+  const auto=()=>{ if(timer) clearInterval(timer); timer=setInterval(tick,5000); };
+  window.addEventListener("goals-changed",()=>{ i=0; tick(); auto(); });
+  if(root) root.addEventListener("click",()=>{ tick(); auto(); });
+  return { start:()=>{ tick(); auto(); } }; })();
 
 function coachContext(){ const kL=state.calories.target-state.calories.consumed,pL=state.macros.protein.t-state.macros.protein.v;
   return [`Datum: ${state.date}`,`Schlaf: ${state.sleep.score}/100 (${state.sleep.hours} h)`,`Erholung: ${state.recovery.score}% (HRV ${state.recovery.hrv}, RHR ${state.recovery.rhr})`,
