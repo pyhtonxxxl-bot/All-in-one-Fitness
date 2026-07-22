@@ -118,7 +118,7 @@
   .rings { display: flex; justify-content: space-between; gap: 10px; flex-wrap: nowrap; }
   .ring-block { display: flex; flex-direction: column; align-items: center; gap: 9px; cursor: pointer; flex: 1 1 0; min-width: 0; }
   .ring-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
-  .ring-track { fill: none; stroke: var(--track); }
+  .ring-track { fill: none; stroke: rgba(255,255,255,0.22); }
   .ring-fill { fill: none; stroke-linecap: round; transition: stroke-dashoffset 1s cubic-bezier(0.22,1,0.36,1); }
   .ring-wrap { position: relative; width: 100%; max-width: 82px; aspect-ratio: 1; margin: 0 auto; display: grid; place-items: center; }
   @media (min-width: 760px) { .ring-wrap { max-width: 116px; } }
@@ -497,7 +497,7 @@ const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 function applyGlass(){ document.body.classList.remove("glass-1","glass-2","glass-3"); document.body.classList.add("glass-"+state.glass); }
 
 function ringSVG(pct, gid){ const s=118,w=9,r=(s-w)/2,c=2*Math.PI*r,o=c*(1-Math.min(Math.max(pct,0),1));
-  return `<svg class="ring-svg" width="${s}" height="${s}"><defs><linearGradient id="${gid}" x1="0%" y1="0%" x2="100%" y2="100%">
+  return `<svg class="ring-svg" viewBox="0 0 ${s} ${s}"><defs><linearGradient id="${gid}" x1="0%" y1="0%" x2="100%" y2="100%">
     <stop offset="0%" stop-color="var(--blue-hi)"/><stop offset="100%" stop-color="var(--blue-lo)"/></linearGradient></defs>
     <circle class="ring-track" cx="${s/2}" cy="${s/2}" r="${r}" stroke-width="${w}"></circle>
     <circle class="ring-fill" cx="${s/2}" cy="${s/2}" r="${r}" stroke="url(#${gid})" stroke-width="${w}" stroke-dasharray="${c}" stroke-dashoffset="${o}"></circle></svg>`; }
