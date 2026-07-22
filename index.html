@@ -88,7 +88,17 @@
   @media (min-width: 760px) { .grid.cols-2 { grid-template-columns: 1fr 1fr; } }
 
   /* Ticker */
-  .ticker-row { margin: 2px 0 16px; }
+  .ticker-row { margin: 2px 0 16px; display: flex; gap: 10px; align-items: stretch; }
+  .ticker-row .goal-ticker { flex: 1; min-width: 0; }
+  .streak-chip { flex: 0 0 auto; display: flex; align-items: center; gap: 7px; padding: 0 14px; border-radius: 14px; cursor: pointer; color: var(--text-primary); font-family: var(--font); -webkit-user-select: none; user-select: none; transition: background .18s; }
+  .streak-chip:hover { background: rgba(255,255,255,0.09); }
+  .streak-chip-ico { color: var(--blue-hi); display: grid; place-items: center; }
+  .streak-chip-ico svg { width: 18px; height: 18px; }
+  .streak-chip-num { font-family: var(--num); font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+  .streak-chip-unit { font-size: 11px; color: var(--text-tertiary); }
+  /* Streak-Fenster */
+  .streak-sheet-top { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+  .streak-sheet-top .streak-ico svg { width: 30px; height: 30px; }
   .goal-ticker { display: flex; align-items: center; gap: 11px; padding: 11px 14px; border-radius: 14px; position: relative; overflow: hidden; cursor: pointer; -webkit-user-select: none; user-select: none; transition: background .18s; }
   .goal-ticker:active { background: rgba(255,255,255,0.04); }
   .goal-ticker-led-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-hi); box-shadow: 0 0 8px rgba(255,255,255,0.55); animation: pulse 1.8s ease-in-out infinite; }
@@ -277,6 +287,11 @@
       </div>
       <div class="goal-ticker-meta" id="goalTickerMeta">0/0</div>
     </div>
+    <button class="streak-chip glass" id="streakChip" title="Streak – Monat ansehen">
+      <span class="streak-chip-ico" id="streakChipIco"></span>
+      <span class="streak-chip-num" id="streakChipNum">0</span>
+      <span class="streak-chip-unit">Tage</span>
+    </button>
   </div>
 
   <div class="card glass"><div class="rings" id="rings"></div></div>
@@ -324,20 +339,10 @@
     </div>
   </div>
 
-  <div class="grid cols-2">
-    <div class="card glass">
-      <div class="card-title">Streak</div>
-      <div class="streak-row">
-        <div class="streak-ico" id="streakIco"></div>
-        <div><span class="streak-num" id="streakNum">0</span><span style="color:var(--text-tertiary);font-size:14px;"> Tage</span></div>
-      </div>
-      <div class="streak-cal" id="streakCal"></div>
-    </div>
-    <div class="card glass">
-      <div class="card-title">Ziele heute</div>
-      <div class="goal-add"><input class="input" id="goalInput" placeholder="Neues Ziel…" maxlength="80" /><button class="chip" id="goalRepeatBtn" title="Ziel jeden Tag wiederholen">Täglich</button><button class="btn small" id="goalAddBtn">Hinzufügen</button></div>
-      <div id="goalList"></div>
-    </div>
+  <div class="card glass">
+    <div class="card-title">Ziele heute</div>
+    <div class="goal-add"><input class="input" id="goalInput" placeholder="Neues Ziel…" maxlength="80" /><button class="chip" id="goalRepeatBtn" title="Ziel jeden Tag wiederholen">Täglich</button><button class="btn small" id="goalAddBtn">Hinzufügen</button></div>
+    <div id="goalList"></div>
   </div>
 
   <div class="card glass" style="margin-top:var(--gap);">
@@ -347,6 +352,18 @@
   </div>
   <div class="section-label">Weitere Werte</div>
   <div class="tiles" id="tiles"></div>
+</div>
+
+<div class="overlay" id="streakOverlay">
+  <div class="sheet glass">
+    <div class="sheet-head"><h3 id="streakSheetTitle">Streak</h3><button class="icon-btn" id="streakClose">✕</button></div>
+    <div class="streak-sheet-top">
+      <div class="streak-ico" id="streakSheetIco"></div>
+      <div><span class="streak-num" id="streakSheetNum">0</span><span style="color:var(--text-tertiary);font-size:14px;"> Tage am Stück</span></div>
+    </div>
+    <div class="cal-dow"><span>M</span><span>D</span><span>M</span><span>D</span><span>F</span><span>S</span><span>S</span></div>
+    <div class="cal-grid" id="streakGrid"></div>
+  </div>
 </div>
 
 <div class="overlay" id="chatOverlay">
@@ -590,9 +607,17 @@ function renderTraining(){ const t=state.training;
   document.getElementById("trainIco").innerHTML=ICONS[state.trainingIcon]||ICONS.dumbbell;
   document.getElementById("trainType").textContent=t.type; document.getElementById("trainWhen").textContent=t.when;
   document.getElementById("trainStats").innerHTML=`<div class="train-stat"><b>${t.duration}</b><span>Minuten</span></div><div class="train-stat"><b>${t.kcal}</b><span>kcal</span></div><div class="train-stat"><b>${t.avgHr}</b><span>Ø Puls</span></div>`; }
-function renderStreak(){ document.getElementById("streakIco").innerHTML=ICONS[state.streakIcon]||ICONS.flame;
-  document.getElementById("streakNum").textContent=state.streak.count;
-  document.getElementById("streakCal").innerHTML=state.streak.days.map(d=>`<div class="streak-dot ${d?"on":""}"></div>`).join(""); }
+function renderStreak(){ document.getElementById("streakChipIco").innerHTML=ICONS[state.streakIcon]||ICONS.flame;
+  document.getElementById("streakChipNum").textContent=state.streak.count; }
+function renderStreakSheet(){ const now=new Date(),y=now.getFullYear(),m=now.getMonth(),today=now.getDate();
+  const names=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+  document.getElementById("streakSheetTitle").textContent="Streak · "+names[m];
+  document.getElementById("streakSheetIco").innerHTML=ICONS[state.streakIcon]||ICONS.flame;
+  document.getElementById("streakSheetNum").textContent=state.streak.count;
+  const first=(new Date(y,m,1).getDay()+6)%7, dim=new Date(y,m+1,0).getDate(), tr=new Set(state.trainedDays);
+  let h=""; for(let i=0;i<first;i++) h+='<div class="cal-cell empty"></div>';
+  for(let d=1;d<=dim;d++){ h+=`<div class="cal-cell${tr.has(d)?" on":""}${d===today?" today":""}">${d}</div>`; }
+  document.getElementById("streakGrid").innerHTML=h; }
 function renderTiles(){ const m=state.metrics; const T=[{l:"Schritte",v:m.steps.toLocaleString("de-DE"),u:"",tr:""},
   {l:"Aktive kcal",v:m.activeKcal,u:"kcal",tr:""},{l:"VO₂max",v:m.vo2max,u:"",tr:"↗ Ausdauer"},{l:"Gewicht",v:m.weight,u:"kg",tr:"↘ −0,6 kg/30T"}];
   document.getElementById("tiles").innerHTML=T.map(t=>`<div class="tile glass"><div class="tile-label">${t.l}</div><div class="tile-val">${t.v}<span class="tile-unit">${t.u}</span></div><div class="tile-trend">${t.tr}</div></div>`).join(""); }
@@ -782,6 +807,9 @@ function renderAll(){ renderRings(); renderBody(); renderMacros(); renderTrainin
 document.getElementById("bodyToggle").addEventListener("click",()=>{ state.view=state.view==="back"?"front":"back"; save(); renderBody(); });
 /* Körpermodell: Tages-/Monatsansicht */
 document.getElementById("bodyMonthBtn").addEventListener("click",()=>{ state.bodyMode=state.bodyMode==="month"?"today":"month"; save(); renderBody(); });
+/* Streak-Fenster */
+document.getElementById("streakChip").addEventListener("click",()=>{ renderStreakSheet(); open("streakOverlay"); });
+document.getElementById("streakClose").addEventListener("click",()=>close("streakOverlay"));
 /* Training speichern (Auto-Füllung) */
 document.getElementById("trainSave").addEventListener("click",saveTraining);
 /* Werte eintragen */
