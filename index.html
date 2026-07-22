@@ -137,7 +137,12 @@
   .coach-focus { font-family: var(--num); font-size: 26px; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; color: var(--text-primary); white-space: pre-line; }
   .coach-sub { color: var(--text-secondary); font-size: 14px; line-height: 1.55; margin-top: 12px; }
   .coach-chips { display: flex; gap: 7px; margin-top: 16px; flex-wrap: wrap; }
-  .coach-chips .pill { font-size: 12px; color: var(--text-secondary); border: 1px solid var(--hairline); background: rgba(255,255,255,0.04); padding: 6px 11px; border-radius: 999px; }
+  .coach-chips .pill { display: inline-flex; align-items: center; font-size: 12px; color: var(--text-secondary); border: 1px solid var(--hairline); background: rgba(255,255,255,0.04); padding: 6px 11px; border-radius: 999px; cursor: pointer; font-family: var(--font); transition: background .16s, color .16s; }
+  .coach-chips .pill:hover { background: rgba(255,255,255,0.09); color: var(--text-primary); }
+  .mk { display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.5; margin-right: 7px; vertical-align: middle; flex: 0 0 4px; }
+  .body-mbtn { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--hairline); background: rgba(255,255,255,0.04); }
+  .body-mbtn.on { background: #3F6FC4; border-color: #3F6FC4; color: #fff; }
+  .goal-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); border: 1px solid var(--hairline); border-radius: 6px; padding: 2px 6px; margin-left: 8px; vertical-align: middle; }
   .btn { appearance: none; border: 1px solid var(--hairline); cursor: pointer; font-family: var(--font); font-weight: 600;
     color: var(--text-primary); background: rgba(255,255,255,0.07); padding: 10px 16px; border-radius: 12px; transition: transform .12s, background .18s; font-size: 14px; }
   .btn:hover { background: rgba(255,255,255,0.11); }
@@ -263,11 +268,14 @@
   <div class="card glass">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
       <div class="card-title" style="margin:0;">Muskelgruppen</div>
-      <button class="btn small" id="bodyToggle">Rückseite</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="icon-btn body-mbtn" id="bodyMonthBtn" title="Monatsansicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9h17M8 2.5v4M16 2.5v4"/></svg></button>
+        <button class="btn small" id="bodyToggle">Rückseite</button>
+      </div>
     </div>
     <div id="bodyMap"></div>
     <div class="body-caption" id="bodyCaption">Tippe eine Muskelgruppe an.</div>
-    <div class="body-legend">weniger<i style="opacity:.14"></i><i style="opacity:.32"></i><i style="opacity:.58"></i><i style="opacity:.92"></i>mehr Aktivität</div>
+    <div class="body-legend" id="bodyLegend"></div>
   </div>
 
   <div class="card glass">
@@ -284,9 +292,9 @@
   <div class="card glass">
     <div class="card-title">KI-Analyse</div>
     <div class="coach-actions" style="margin-top:0;">
-      <button class="btn small" id="anWeek">📊 Wochen-Report</button>
-      <button class="btn small" id="anPattern">🧠 Muster finden</button>
-      <button class="btn small" id="anForecast">📈 Prognose</button>
+      <button class="btn small" id="anWeek"><i class="mk"></i>Wochen-Report</button>
+      <button class="btn small" id="anPattern"><i class="mk"></i>Muster finden</button>
+      <button class="btn small" id="anForecast"><i class="mk"></i>Prognose</button>
     </div>
   </div>
 
@@ -314,7 +322,7 @@
     </div>
     <div class="card glass">
       <div class="card-title">Ziele heute</div>
-      <div class="goal-add"><input class="input" id="goalInput" placeholder="Neues Ziel…" maxlength="80" /><button class="btn small" id="goalAddBtn">Hinzufügen</button></div>
+      <div class="goal-add"><input class="input" id="goalInput" placeholder="Neues Ziel…" maxlength="80" /><button class="chip" id="goalRepeatBtn" title="Ziel jeden Tag wiederholen">Täglich</button><button class="btn small" id="goalAddBtn">Hinzufügen</button></div>
       <div id="goalList"></div>
     </div>
   </div>
@@ -422,12 +430,15 @@ function seedState() {
     weightHistory:[82.0,82.1,81.9,82.0,81.8,81.9,81.7,81.8,81.6,81.7,81.5,81.6,81.7,81.5,81.4,81.5,81.6,81.4,81.5,81.3,81.4,81.5,81.3,81.4,81.2,81.3,81.4,81.3,81.5,81.4],
     targetWeight:79,
     view:"front",
-    muscles:{Brust:3,Schultern:2,Arme:1,Trizeps:1,Bauch:2,"Rücken":2,Beine:1,Beinbeuger:0,"Gesäß":1,Waden:0},
+    bodyMode:"today",
+    muscleToday:["Brust","Schultern","Bauch"],
+    muscleMonth:{Brust:12,Schultern:9,Arme:7,Trizeps:5,Bauch:14,"Rücken":8,Beine:6,Beinbeuger:4,"Gesäß":3,Waden:5},
     trainedDays:[1,2,4,6,8,9,11,13,15,16,18,20,22,23,25,27,29,30],
     reminders:{enabled:false},
     coachMessage:"",
-    goals:[{id:uid(),text:"Ernährung in Yazio loggen",done:true},{id:uid(),text:"Proteinziel erreichen (175 g)",done:false},
-      {id:uid(),text:"Zone-2 Cardio, 30 min",done:false},{id:uid(),text:"Vor 23:00 im Bett",done:false}],
+    goalsDay:new Date().toDateString(),
+    goals:[{id:uid(),text:"Ernährung in Yazio loggen",done:true,repeat:true},{id:uid(),text:"Proteinziel erreichen (175 g)",done:false,repeat:true},
+      {id:uid(),text:"Zone-2 Cardio, 30 min",done:false,repeat:false},{id:uid(),text:"Vor 23:00 im Bett",done:false,repeat:true}],
     chat:[], apiKey:""
   };
 }
@@ -436,7 +447,11 @@ function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return seedS
   const s=JSON.parse(raw); if(s.date!==todayISO()) s.date=todayISO();
   s.glass=s.glass||2; s.streakIcon=s.streakIcon||"flame"; s.trainingIcon=s.trainingIcon||"dumbbell";
   const d=seedState(); s.week=s.week||d.week; s.weightHistory=s.weightHistory||d.weightHistory;
-  s.trainedDays=s.trainedDays||d.trainedDays; s.reminders=s.reminders||d.reminders; s.targetWeight=s.targetWeight||d.targetWeight; s.muscles=Object.assign({},d.muscles,s.muscles||{}); s.view=s.view||"front"; return s;
+  s.trainedDays=s.trainedDays||d.trainedDays; s.reminders=s.reminders||d.reminders; s.targetWeight=s.targetWeight||d.targetWeight;
+  s.view=s.view||"front"; s.bodyMode=s.bodyMode||"today"; s.muscleToday=s.muscleToday||d.muscleToday; s.muscleMonth=Object.assign({},d.muscleMonth,s.muscleMonth||{});
+  s.goals=(s.goals||d.goals).map(g=>({repeat:false,...g})); s.goalsDay=s.goalsDay||d.goalsDay;
+  const today=new Date().toDateString(); if(s.goalsDay!==today){ s.goalsDay=today; s.goals.forEach(g=>{ if(g.repeat) g.done=false; }); }
+  return s;
 } catch { return seedState(); } }
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
 const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -522,11 +537,26 @@ const BODY_BACK=`<svg class="body-svg" viewBox="0 0 200 400" xmlns="http://www.w
 <g class="base">${BODY_PARTS}</g>
 <g clip-path="url(#clipBk)">${M_BACK}</g>
 </svg>`;
-function renderBody(){ document.getElementById("bodyMap").innerHTML=(state.view==="back"?BODY_BACK:BODY_SVG);
+const NAVY="#3F6FC4";
+function renderBody(){ const month=state.bodyMode==="month";
+  document.getElementById("bodyMap").innerHTML=(state.view==="back"?BODY_BACK:BODY_SVG);
   const tb=document.getElementById("bodyToggle"); if(tb) tb.textContent=state.view==="back"?"Vorderseite":"Rückseite";
-  const op=[0.14,0.32,0.58,0.92];
-  document.querySelectorAll("#bodyMap .muscle").forEach(el=>{ el.style.opacity=op[state.muscles[el.dataset.m]||0]; el.onclick=()=>selectMuscle(el.dataset.m); }); }
-function selectMuscle(m){ const lvl=state.muscles[m]||0, txt=["länger nicht trainiert","leichte Aktivität","gute Aktivität","hohe Aktivität – zuletzt heute"][lvl];
+  const mb=document.getElementById("bodyMonthBtn"); if(mb) mb.classList.toggle("on",month);
+  const max=Math.max(1,...Object.values(state.muscleMonth||{}));
+  document.querySelectorAll("#bodyMap .muscle").forEach(el=>{ const m=el.dataset.m;
+    if(month){ const c=(state.muscleMonth&&state.muscleMonth[m])||0;
+      el.style.fill=c?NAVY:"#fff"; el.style.opacity=c?(0.28+0.72*(c/max)):0.12; }
+    else { const on=(state.muscleToday||[]).includes(m);
+      el.style.fill=on?NAVY:"#fff"; el.style.opacity=on?1:0.16; }
+    el.onclick=()=>selectMuscle(m); });
+  document.getElementById("bodyCaption").textContent=month?"Monatsansicht – Farbe zeigt, wie oft du den Muskel diesen Monat trainiert hast.":"Tippe eine Muskelgruppe an.";
+  const lg=document.getElementById("bodyLegend");
+  if(lg){ lg.innerHTML=month
+    ? `weniger<i style="background:${NAVY};opacity:.3"></i><i style="background:${NAVY};opacity:.55"></i><i style="background:${NAVY};opacity:.78"></i><i style="background:${NAVY};opacity:1"></i>mehr · diesen Monat`
+    : `<i style="background:${NAVY};opacity:1"></i>heute trainiert<span style="width:14px"></span><i style="background:#fff;opacity:.16"></i>nicht trainiert`; } }
+function selectMuscle(m){ let txt;
+  if(state.bodyMode==="month"){ const c=(state.muscleMonth&&state.muscleMonth[m])||0; txt=c?`${c}× diesen Monat trainiert`:"diesen Monat noch nicht trainiert"; }
+  else txt=(state.muscleToday||[]).includes(m)?"heute trainiert":"heute nicht trainiert";
   document.getElementById("bodyCaption").textContent=m+" — "+txt;
   document.querySelectorAll("#bodyMap .muscle").forEach(el=>el.classList.toggle("sel",el.dataset.m===m)); }
 let trainSel=new Set();
@@ -536,7 +566,8 @@ function renderMuscleChips(){ trainSel=new Set(); const list=["Brust","Schultern
   el.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{ const m=c.dataset.m; if(trainSel.has(m)){trainSel.delete(m);c.classList.remove("on");}else{trainSel.add(m);c.classList.add("on");} }));
   const note=document.getElementById("trainNote"); if(note) note.textContent=""; }
 function saveTraining(){ const note=document.getElementById("trainNote"); if(!trainSel.size){ note.textContent="Wähle mindestens eine Muskelgruppe."; return; }
-  const names=[...trainSel]; names.forEach(m=>state.muscles[m]=3); const t=new Date().getDate(); if(!state.trainedDays.includes(t)) state.trainedDays.push(t);
+  const names=[...trainSel]; names.forEach(m=>{ if(!state.muscleToday.includes(m)) state.muscleToday.push(m); state.muscleMonth[m]=(state.muscleMonth[m]||0)+1; });
+  const t=new Date().getDate(); if(!state.trainedDays.includes(t)) state.trainedDays.push(t);
   save(); renderAll(); trainSel=new Set(); document.querySelectorAll("#muscleChips .chip.on").forEach(c=>c.classList.remove("on"));
   note.textContent="✓ "+names.join(", ")+" als heute trainiert markiert."; }
 
@@ -610,10 +641,11 @@ function demoAnalyze(type){ const wh=state.weightHistory, delta=(wh[wh.length-1]
 
 function renderGoals(){ const list=document.getElementById("goalList");
   if(!state.goals.length) list.innerHTML=`<div class="empty-hint">Noch keine Ziele – füg oben eins hinzu.</div>`;
-  else{ list.innerHTML=state.goals.map(g=>`<div class="goal-item" data-id="${g.id}"><div class="goal-check ${g.done?"done":""}">✓</div><div class="goal-txt ${g.done?"done":""}">${esc(g.text)}</div><button class="goal-del" title="Löschen">×</button></div>`).join("");
+  else{ list.innerHTML=state.goals.map(g=>`<div class="goal-item" data-id="${g.id}"><div class="goal-check ${g.done?"done":""}">✓</div><div class="goal-txt ${g.done?"done":""}">${esc(g.text)}${g.repeat?'<span class="goal-tag">täglich</span>':''}</div><button class="goal-del" title="Löschen">×</button></div>`).join("");
     list.querySelectorAll(".goal-item").forEach(it=>{ const id=it.dataset.id; it.querySelector(".goal-check").addEventListener("click",()=>toggleGoal(id)); it.querySelector(".goal-del").addEventListener("click",()=>deleteGoal(id)); }); }
   save(); window.dispatchEvent(new CustomEvent("goals-changed")); }
-function addGoal(t){ t=t.trim(); if(!t) return; state.goals.push({id:uid(),text:t,done:false}); renderGoals(); }
+function addGoal(t){ t=t.trim(); if(!t) return; const rb=document.getElementById("goalRepeatBtn"), rep=rb&&rb.classList.contains("on");
+  state.goals.push({id:uid(),text:t,done:false,repeat:!!rep}); if(rb) rb.classList.remove("on"); renderGoals(); }
 function toggleGoal(id){ const g=state.goals.find(x=>x.id===id); if(g) g.done=!g.done; renderGoals(); }
 function deleteGoal(id){ state.goals=state.goals.filter(x=>x.id!==id); renderGoals(); }
 
@@ -622,7 +654,7 @@ const Ticker=(()=>{ const stage=document.getElementById("goalTickerStage"),meta=
     if(!total) items=[{s:"empty",t:"Keine Ziele heute – füg eins hinzu."}]; else if(done===total) items=[{s:"done",t:"✓ Alle Ziele erledigt – starker Tag."}];
     else items=g.filter(x=>!x.done).map(x=>({s:"pending",t:x.text})); return{items,done,total}; };
   const gl=s=>s==="done"?"✓":s==="pending"?"○":"·";
-  const tick=()=>{ const{items,done,total}=build(); if(i>=items.length) i=0; const it=items[i]; meta.textContent=`${done}/${total}`;
+  const tick=()=>{ const{items,done,total}=build(); if(i>=items.length) i=0; const it=items[i]; meta.textContent=total?Math.round(done/total*100)+" %":"0 %";
     const old=stage.querySelector(".goal-ticker-row"),row=document.createElement("div"); row.className="goal-ticker-row"+(first?"":" is-entering");
     row.innerHTML=`<span class="goal-ticker-status">${gl(it.s)}</span><span class="goal-ticker-text">${esc(it.t)}</span>`;
     if(old&&!first){ old.classList.add("is-leaving"); setTimeout(()=>old.remove(),460); } else if(old) old.remove(); stage.appendChild(row); i++; first=false; };
@@ -657,12 +689,13 @@ function makeCoachInsight(){ const r=state.recovery.score,s=state.sleep.score,p=
   const sleepPhrase=s>=75?`Schlaf sitzt (Score ${s})`:`Schlaf mittelmäßig (Score ${s}) – heute früher ins Bett`;
   const proteinPhrase=p>0?`Noch ${p} g Protein offen: ${mealSuggestion(p)}.`:"Protein im grünen Bereich.";
   const sub=`${sleepPhrase}, Erholung ${r} %. ${proteinPhrase}`;
-  const chips=[{i:"💤",t:`Schlaf ${s}`},{i:"⚡",t:`Erholung ${r} %`},p>0?{i:"🥩",t:`−${p} g Protein`}:{i:"🥩",t:"Protein ok"}];
+  const chips=[{t:`Schlaf ${s}`,sel:"#rings"},{t:`Erholung ${r} %`,sel:"#rings"},p>0?{t:`−${p} g Protein`,sel:"#macros"}:{t:"Protein ok",sel:"#macros"}];
   return {head,sub,chips}; }
 function renderCoach(){ const ins=makeCoachInsight();
   document.getElementById("coachHead").textContent=ins.head;
   document.getElementById("coachSub").textContent=ins.sub;
-  document.getElementById("coachChips").innerHTML=ins.chips.map(c=>`<span class="pill">${c.i} ${c.t}</span>`).join("");
+  document.getElementById("coachChips").innerHTML=ins.chips.map(c=>`<button class="pill" data-scroll="${c.sel}"><i class="mk"></i>${c.t}</button>`).join("");
+  document.querySelectorAll("#coachChips .pill").forEach(b=>b.addEventListener("click",()=>{ const t=document.querySelector(b.dataset.scroll); if(t) t.scrollIntoView({behavior:"smooth",block:"center"}); }));
   state.coachMessage=ins.head.replace(/\n/g," ")+" "+ins.sub; save(); }
 function renderChat(){ const log=document.getElementById("chatLog"); log.innerHTML=state.chat.map(m=>`<div class="msg ${m.role}">${esc(m.text)}</div>`).join(""); log.scrollTop=log.scrollHeight; }
 async function sendChat(){ const f=document.getElementById("chatField"),text=f.value.trim(); if(!text) return; f.value="";
@@ -676,6 +709,7 @@ document.getElementById("chatClose").addEventListener("click",()=>close("chatOve
 document.getElementById("chatSend").addEventListener("click",sendChat);
 document.getElementById("chatField").addEventListener("keydown",e=>{ if(e.key==="Enter") sendChat(); });
 document.getElementById("regenBtn").addEventListener("click",()=>{ state.coachMessage=""; renderCoach(); });
+document.getElementById("goalRepeatBtn").addEventListener("click",e=>e.currentTarget.classList.toggle("on"));
 document.getElementById("goalAddBtn").addEventListener("click",()=>{ const i=document.getElementById("goalInput"); addGoal(i.value); i.value=""; });
 document.getElementById("goalInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ addGoal(e.target.value); e.target.value=""; } });
 document.getElementById("settingsBtn").addEventListener("click",()=>{ document.getElementById("apiKeyField").value=state.apiKey||"";
@@ -692,7 +726,9 @@ document.querySelectorAll(".overlay").forEach(o=>o.addEventListener("click",e=>{
 
 function renderAll(){ renderRings(); renderBody(); renderMacros(); renderTraining(); renderStreak(); renderMonth(); renderTiles(); renderGoals(); renderCoach(); }
 /* Körpermodell: Vorder-/Rückansicht */
-document.getElementById("bodyToggle").addEventListener("click",()=>{ state.view=state.view==="back"?"front":"back"; save(); renderBody(); document.getElementById("bodyCaption").textContent="Tippe auf eine Muskelgruppe."; });
+document.getElementById("bodyToggle").addEventListener("click",()=>{ state.view=state.view==="back"?"front":"back"; save(); renderBody(); });
+/* Körpermodell: Tages-/Monatsansicht */
+document.getElementById("bodyMonthBtn").addEventListener("click",()=>{ state.bodyMode=state.bodyMode==="month"?"today":"month"; save(); renderBody(); });
 /* Training speichern (Auto-Füllung) */
 document.getElementById("trainSave").addEventListener("click",saveTraining);
 /* Werte eintragen */
@@ -717,9 +753,9 @@ document.getElementById("remTest").addEventListener("click",()=>{ if(state.remin
 /* KI-Analyse */
 async function runAnalysis(title,type,instruction){ document.getElementById("analysisTitle").textContent=title; const body=document.getElementById("analysisBody"); body.textContent="Analysiere…"; open("analysisOverlay");
   try{ body.textContent=await aiAnalyze(type,instruction); } catch(e){ body.textContent="⚠️ "+e.message; } }
-document.getElementById("anWeek").addEventListener("click",()=>runAnalysis("📊 Wochen-Report","week","Erstelle einen kompakten Wochen-Report auf Deutsch: 1) Was lief gut, 2) was nicht, 3) erkennbare Muster, 4) drei konkrete Ziele für nächste Woche. Nutze konkrete Zahlen aus den Daten. Kurz und ohne Floskeln."));
-document.getElementById("anPattern").addEventListener("click",()=>runAnalysis("🧠 Muster","pattern","Finde 2–3 konkrete Muster oder Zusammenhänge in meinen Daten (z. B. Schlaf↔Erholung, Trainingsbelastung↔Recovery, Protein↔Ziel). Als kurze Erkenntnisse mit Zahlen."));
-document.getElementById("anForecast").addEventListener("click",()=>runAnalysis("📈 Prognose","forecast","Gib eine kurze, realistische Prognose mit Zahlen: Wann erreiche ich bei diesem Gewichtstrend mein Zielgewicht? Wie entwickelt sich meine Ausdauer/VO2max? Was sollte ich anpassen?"));
+document.getElementById("anWeek").addEventListener("click",()=>runAnalysis("Wochen-Report","week","Erstelle einen kompakten Wochen-Report auf Deutsch: 1) Was lief gut, 2) was nicht, 3) erkennbare Muster, 4) drei konkrete Ziele für nächste Woche. Nutze konkrete Zahlen aus den Daten. Kurz und ohne Floskeln."));
+document.getElementById("anPattern").addEventListener("click",()=>runAnalysis("Muster","pattern","Finde 2–3 konkrete Muster oder Zusammenhänge in meinen Daten (z. B. Schlaf↔Erholung, Trainingsbelastung↔Recovery, Protein↔Ziel). Als kurze Erkenntnisse mit Zahlen."));
+document.getElementById("anForecast").addEventListener("click",()=>runAnalysis("Prognose","forecast","Gib eine kurze, realistische Prognose mit Zahlen: Wann erreiche ich bei diesem Gewichtstrend mein Zielgewicht? Wie entwickelt sich meine Ausdauer/VO2max? Was sollte ich anpassen?"));
 document.getElementById("analysisClose").addEventListener("click",()=>close("analysisOverlay"));
 /* Barcode / Open Food Facts */
 let barcodeProduct=null,scanStream=null,scanTimer=null;

@@ -1,0 +1,50 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>App-Icon Vorschläge</title>
+<style>
+:root{--bg:#0A0A0C;--tp:#F7F7F8;--ts:#9A9A9F;--tt:#5C5C61;--hair:rgba(255,255,255,0.09);
+ --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",Roboto,sans-serif;
+ --num:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter",system-ui,sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tp);font-family:var(--font);padding:26px 18px 50px}
+h2{font-family:var(--num);font-size:20px;font-weight:700;letter-spacing:-0.02em}
+.hint{color:var(--tt);font-size:12.5px;margin:6px 0 20px;line-height:1.5}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px 14px;max-width:520px}
+.cell{display:flex;flex-direction:column;align-items:center;gap:9px}
+.ico{width:104px;height:104px;border-radius:24px;display:grid;place-items:center;overflow:hidden;box-shadow:0 8px 22px rgba(0,0,0,.5)}
+.dark{background:#0E0E12;border:1px solid var(--hair)}
+.light{background:#F2F2F3}
+.glass{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);backdrop-filter:blur(8px)}
+.grad{background:linear-gradient(150deg,#1A1A20,#050506)}
+.name{font-size:12px;color:var(--ts);font-weight:600;text-align:center}
+.num{font-size:11px;color:var(--tt)}
+svg{display:block}
+.mono{font-family:var(--num);font-weight:800;letter-spacing:-0.04em}
+</style></head><body>
+<h2>App-Icon — Vorschläge (monochrom)</h2>
+<div class="hint">12 unterschiedliche Richtungen, damit du viel Auswahl hast. Alle passend zum Schwarz/Weiß-Design. Sag mir einfach die Nummer(n).</div>
+<div class="grid">
+
+<div class="cell"><div class="ico dark"><span class="mono" style="font-size:58px;color:#F7F7F8">E</span></div><div class="name">1 · Monogramm E</div></div>
+
+<div class="cell"><div class="ico light"><span class="mono" style="font-size:40px;color:#0B0B0C">EC</span></div><div class="name">2 · Monogramm EC (invertiert)</div></div>
+
+<div class="cell"><div class="ico grad"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></div><div class="name">3 · Hantel (Linie)</div></div>
+
+<div class="cell"><div class="ico dark"><svg width="60" height="60" viewBox="0 0 40 40"><circle cx="20" cy="20" r="15" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="5"/><circle cx="20" cy="20" r="15" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-dasharray="94" stroke-dashoffset="26" transform="rotate(-90 20 20)"/></svg></div><div class="name">4 · Aktivitäts-Ring</div></div>
+
+<div class="cell"><div class="ico grad"><svg width="62" height="62" viewBox="0 0 40 40" fill="none" stroke-linecap="round"><circle cx="20" cy="20" r="16" stroke="rgba(255,255,255,.10)" stroke-width="3.4"/><circle cx="20" cy="20" r="16" stroke="#fff" stroke-width="3.4" stroke-dasharray="100" stroke-dashoffset="30" transform="rotate(-90 20 20)"/><circle cx="20" cy="20" r="11" stroke="rgba(255,255,255,.10)" stroke-width="3.4"/><circle cx="20" cy="20" r="11" stroke="#cfcfcf" stroke-width="3.4" stroke-dasharray="69" stroke-dashoffset="30" transform="rotate(-90 20 20)"/><circle cx="20" cy="20" r="6" stroke="rgba(255,255,255,.10)" stroke-width="3.4"/><circle cx="20" cy="20" r="6" stroke="#9a9a9a" stroke-width="3.4" stroke-dasharray="38" stroke-dashoffset="10" transform="rotate(-90 20 20)"/></svg></div><div class="name">5 · Drei Ringe</div></div>
+
+<div class="cell"><div class="ico dark"><svg width="60" height="60" viewBox="0 0 40 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h7l3-8 5 16 3-11 3 3h12"/></svg></div><div class="name">6 · Puls / Herzschlag</div></div>
+
+<div class="cell"><div class="ico light"><svg width="46" height="56" viewBox="0 0 24 30" fill="#0B0B0C"><path d="M13 0 2 17h7l-2 13 13-18h-7z"/></svg></div><div class="name">7 · Blitz (invertiert)</div></div>
+
+<div class="cell"><div class="ico grad"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15l7-7 7 7M5 9l7-7 7 7"/></svg></div><div class="name">8 · Aufwärts (Progress)</div></div>
+
+<div class="cell"><div class="ico dark"><svg width="58" height="58" viewBox="0 0 24 24" fill="#fff"><rect x="3" y="14" width="4" height="7" rx="1"/><rect x="10" y="9" width="4" height="12" rx="1"/><rect x="17" y="4" width="4" height="17" rx="1"/></svg></div><div class="name">9 · Balken (aufsteigend)</div></div>
+
+<div class="cell"><div class="ico grad"><svg width="46" height="56" viewBox="0 0 22 28" fill="none" stroke="#fff" stroke-width="1.7" stroke-linejoin="round"><path d="M11 1c4 5 7 8 7 14a7 7 0 0 1-14 0c0-3 1-5 3-7 1 2 2 3 4 3 0-4-1-8 0-13z"/></svg></div><div class="name">10 · Flamme (Streak)</div></div>
+
+<div class="cell"><div class="ico dark"><svg width="50" height="60" viewBox="0 0 30 40" fill="#fff"><circle cx="15" cy="7" r="5"/><path d="M15 14c-6 0-10 3-11 9 2 1 4 1 5-1 0 6-1 11 1 17h4l1-9 1 9h4c2-6 1-11 1-17 1 2 3 2 5 1-1-6-5-9-11-9z"/></svg></div><div class="name">11 · Körper / Athlet</div></div>
+
+<div class="cell"><div class="ico light"><svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="#0B0B0C" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="#0B0B0C" stroke="none"/></svg></div><div class="name">12 · Ziel (invertiert)</div></div>
+
+</div></body></html>
