@@ -109,8 +109,8 @@
   .goal-ticker-status { width: 16px; flex: 0 0 16px; text-align: center; color: var(--text-tertiary); }
   .goal-ticker-text { flex: 1; overflow: hidden; text-overflow: ellipsis; }
   .goal-ticker-meta { font-size: 12px; font-weight: 600; color: var(--text-secondary); padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,0.06); }
-  .goal-ticker-row.is-leaving  { animation: ticker-leave .34s cubic-bezier(0.55,0,0.55,1) forwards; }
-  .goal-ticker-row.is-entering { animation: ticker-enter .40s cubic-bezier(0.22,1,0.36,1) .16s both; }
+  .goal-ticker-row.is-leaving  { animation: ticker-leave .26s cubic-bezier(0.55,0,0.55,1) forwards; }
+  .goal-ticker-row.is-entering { animation: ticker-enter .32s cubic-bezier(0.22,1,0.36,1) both; }
   @keyframes ticker-leave { from { opacity: 1; transform: rotateX(0) translateY(0); } to { opacity: 0; transform: rotateX(90deg) translateY(-60%); } }
   @keyframes ticker-enter { from { opacity: 0; transform: rotateX(-90deg) translateY(60%); } to { opacity: 1; transform: rotateX(0) translateY(0); } }
 
@@ -726,13 +726,17 @@ const Ticker=(()=>{ const stage=document.getElementById("goalTickerStage"),meta=
     if(!total) items=[{s:"empty",t:"Keine Ziele heute – füg eins hinzu."}]; else if(done===total) items=[{s:"done",t:"✓ Alle Ziele erledigt – starker Tag."}];
     else items=g.filter(x=>!x.done).map(x=>({s:"pending",t:x.text})); return{items,done,total}; };
   const gl=s=>s==="done"?"✓":s==="pending"?"○":"·";
-  const tick=()=>{ const{items,done,total}=build(); if(i>=items.length) i=0; const it=items[i]; meta.textContent=total?Math.round(done/total*100)+" %":"0 %";
+  let leaveTimer=null;
+  const tick=()=>{ if(leaveTimer){ clearTimeout(leaveTimer); leaveTimer=null; }
+    const{items,done,total}=build(); if(i>=items.length) i=0; const it=items[i]; meta.textContent=total?Math.round(done/total*100)+" %":"0 %";
     const ex=[...stage.querySelectorAll(".goal-ticker-row")],old=ex.pop(); ex.forEach(r=>r.remove());
-    const row=document.createElement("div"); row.className="goal-ticker-row";
-    row.innerHTML=`<span class="goal-ticker-status">${gl(it.s)}</span><span class="goal-ticker-text">${esc(it.t)}</span>`;
-    if(old){ if(first){ old.remove(); } else { old.classList.add("is-leaving"); setTimeout(()=>old.remove(),520); } }
-    if(!first) row.classList.add("is-entering");
-    stage.appendChild(row); i++; first=false; };
+    const animIn=!first;
+    const show=()=>{ const row=document.createElement("div"); row.className="goal-ticker-row";
+      row.innerHTML=`<span class="goal-ticker-status">${gl(it.s)}</span><span class="goal-ticker-text">${esc(it.t)}</span>`;
+      if(animIn) row.classList.add("is-entering"); stage.appendChild(row); };
+    if(old&&!first){ old.classList.add("is-leaving"); leaveTimer=setTimeout(()=>{ old.remove(); show(); leaveTimer=null; },260); }
+    else { if(old) old.remove(); show(); }
+    i++; first=false; };
   const auto=()=>{ if(timer) clearInterval(timer); timer=setInterval(tick,5000); };
   window.addEventListener("goals-changed",()=>{ i=0; tick(); auto(); });
   if(root) root.addEventListener("click",()=>{ tick(); auto(); });
