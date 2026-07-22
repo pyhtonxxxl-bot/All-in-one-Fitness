@@ -319,16 +319,9 @@
   </div>
 
   <div class="card glass">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-      <div class="card-title" style="margin:0;">Muskelgruppen</div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button class="icon-btn body-mbtn" id="bodyMonthBtn" title="Monatsansicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9h17M8 2.5v4M16 2.5v4"/></svg></button>
-        <button class="btn small" id="bodyToggle">Rückseite</button>
-      </div>
-    </div>
-    <div id="bodyMap"></div>
-    <div class="body-caption" id="bodyCaption">Tippe eine Muskelgruppe an.</div>
-    <div class="body-legend" id="bodyLegend"></div>
+    <div class="card-title">Ziele heute</div>
+    <div class="goal-add"><input class="input" id="goalInput" placeholder="Neues Ziel…" maxlength="80" /><button class="chip" id="goalRepeatBtn" title="Ziel jeden Tag wiederholen">Täglich</button><button class="btn small" id="goalAddBtn">Hinzufügen</button></div>
+    <div id="goalList"></div>
   </div>
 
   <div class="card glass">
@@ -342,15 +335,22 @@
   </div>
 
   <div class="card glass">
-    <div class="card-title">KI-Analyse</div>
-    <div class="an-chips" id="anChips"></div>
-    <div class="an-result" id="anResult"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="card-title" style="margin:0;">Muskelgruppen</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="icon-btn body-mbtn" id="bodyMonthBtn" title="Monatsansicht"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M3.5 9h17M8 2.5v4M16 2.5v4"/></svg></button>
+        <button class="btn small" id="bodyToggle">Rückseite</button>
+      </div>
+    </div>
+    <div id="bodyMap"></div>
+    <div class="body-caption" id="bodyCaption">Tippe eine Muskelgruppe an.</div>
+    <div class="body-legend" id="bodyLegend"></div>
   </div>
 
   <div class="card glass">
-    <div class="card-title">Ziele heute</div>
-    <div class="goal-add"><input class="input" id="goalInput" placeholder="Neues Ziel…" maxlength="80" /><button class="chip" id="goalRepeatBtn" title="Ziel jeden Tag wiederholen">Täglich</button><button class="btn small" id="goalAddBtn">Hinzufügen</button></div>
-    <div id="goalList"></div>
+    <div class="card-title">KI-Analyse</div>
+    <div class="an-chips" id="anChips"></div>
+    <div class="an-result" id="anResult"></div>
   </div>
 
   <div class="card glass" style="margin-top:var(--gap);">
@@ -402,7 +402,7 @@
       <div class="field-label">Erinnerungen</div>
       <div class="coach-actions" style="margin-top:0;"><button class="btn small" id="remEnable">Aktivieren</button><button class="btn small" id="remTest">Test</button></div>
       <div class="note" id="remNote">Erinnerungen an Protein & Schlaf – laufen, solange die App/der Browser-Tab offen ist. Für feste Zeiten (z. B. 6:00 Uhr) unabhängig vom Tab braucht es die installierte iOS-App oder ein Backend.</div>
-      <div class="coach-actions"><button class="btn primary small" id="settingsSave">Speichern</button><button class="btn small" id="resetDemo">Demo zurücksetzen</button></div>
+      <div class="coach-actions"><button class="btn primary small" id="settingsSave">Speichern</button><button class="btn small" id="resetDemo">Alles zurücksetzen</button></div>
     </div>
   </div>
 </div>
@@ -436,7 +436,7 @@
 
 
 <script>
-const KEY = "elitecoach:state:v3";
+const KEY = "elitecoach:state:v4";
 const MODEL = "claude-sonnet-5";
 const todayISO = () => new Date().toISOString().slice(0,10);
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -458,24 +458,23 @@ const ICONS = {
 function seedState() {
   return {
     date: todayISO(), glass: 2, streakIcon: "flame", trainingIcon: "dumbbell",
-    sleep:{score:82,hours:7.4,deep:22,rem:24}, recovery:{score:64,hrv:68,rhr:52},
-    calories:{consumed:1840,target:2650}, macros:{protein:{v:118,t:175},carbs:{v:190,t:280},fat:{v:58,t:80}},
-    training:{type:"Krafttraining",when:"Heute, 07:20",duration:62,kcal:480,avgHr:128},
-    metrics:{steps:8640,activeKcal:640,vo2max:48.2,weight:81.4},
-    streak:{count:12,days:[1,1,0,1,1,1,1,0,1,1,1,1,1,1]},
-    week:[{d:"Mo",min:55},{d:"Di",min:0},{d:"Mi",min:62},{d:"Do",min:38},{d:"Fr",min:70},{d:"Sa",min:0},{d:"So",min:45}],
-    weightHistory:[82.0,82.1,81.9,82.0,81.8,81.9,81.7,81.8,81.6,81.7,81.5,81.6,81.7,81.5,81.4,81.5,81.6,81.4,81.5,81.3,81.4,81.5,81.3,81.4,81.2,81.3,81.4,81.3,81.5,81.4],
-    targetWeight:79,
+    sleep:{score:0,hours:0,deep:0,rem:0}, recovery:{score:0,hrv:0,rhr:0},
+    calories:{consumed:0,target:2650}, macros:{protein:{v:0,t:175},carbs:{v:0,t:280},fat:{v:0,t:80}},
+    training:{type:"Noch kein Training",when:"—",duration:0,kcal:0,avgHr:0},
+    metrics:{steps:0,activeKcal:0,vo2max:0,weight:0},
+    streak:{count:0,days:[0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+    week:[{d:"Mo",min:0},{d:"Di",min:0},{d:"Mi",min:0},{d:"Do",min:0},{d:"Fr",min:0},{d:"Sa",min:0},{d:"So",min:0}],
+    weightHistory:new Array(30).fill(0),
+    targetWeight:0,
     view:"front",
     bodyMode:"today",
-    muscleToday:["Brust","Schultern","Bauch"],
-    muscleMonth:{Brust:12,Schultern:9,Arme:7,Trizeps:5,Bauch:14,"Rücken":8,Beine:6,Beinbeuger:4,"Gesäß":3,Waden:5},
-    trainedDays:[1,2,4,6,8,9,11,13,15,16,18,20,22,23,25,27,29,30],
+    muscleToday:[],
+    muscleMonth:{Brust:0,Schultern:0,Arme:0,Trizeps:0,Bauch:0,"Rücken":0,Beine:0,Beinbeuger:0,"Gesäß":0,Waden:0},
+    trainedDays:[],
     reminders:{enabled:false},
     coachMessage:"",
     goalsDay:new Date().toDateString(),
-    goals:[{id:uid(),text:"Ernährung loggen",done:false,repeat:true},{id:uid(),text:"Proteinziel erreichen (175 g)",done:false,repeat:true},
-      {id:uid(),text:"Vor 23:00 im Bett",done:false,repeat:true}],
+    goals:[],
     chat:[], apiKey:""
   };
 }
@@ -618,7 +617,7 @@ function renderMacros(){ const D=[{name:"Kalorien",v:state.calories.consumed,t:s
 function renderTraining(){ const t=state.training;
   document.getElementById("trainIco").innerHTML=ICONS[state.trainingIcon]||ICONS.dumbbell;
   document.getElementById("trainType").textContent=t.type; document.getElementById("trainWhen").textContent=t.when;
-  document.getElementById("trainStats").innerHTML=`<div class="train-stat"><b>${t.duration}</b><span>Minuten</span></div><div class="train-stat"><b>${t.kcal}</b><span>kcal</span></div><div class="train-stat"><b>${t.avgHr}</b><span>Ø Puls</span></div>`; }
+  const z=!t.duration; document.getElementById("trainStats").innerHTML=`<div class="train-stat"><b>${z?"—":t.duration}</b><span>Minuten</span></div><div class="train-stat"><b>${z?"—":t.kcal}</b><span>kcal</span></div><div class="train-stat"><b>${z?"—":t.avgHr}</b><span>Ø Puls</span></div>`; }
 function renderStreak(){ document.getElementById("streakChipIco").innerHTML=ICONS[state.streakIcon]||ICONS.flame;
   document.getElementById("streakChipNum").textContent=state.streak.count; }
 function renderStreakSheet(){ const now=new Date(),y=now.getFullYear(),m=now.getMonth(),today=now.getDate();
@@ -630,8 +629,8 @@ function renderStreakSheet(){ const now=new Date(),y=now.getFullYear(),m=now.get
   let h=""; for(let i=0;i<first;i++) h+='<div class="cal-cell empty"></div>';
   for(let d=1;d<=dim;d++){ h+=`<div class="cal-cell${tr.has(d)?" on":""}${d===today?" today":""}">${d}</div>`; }
   document.getElementById("streakGrid").innerHTML=h; }
-function renderTiles(){ const m=state.metrics; const T=[{l:"Schritte",v:m.steps.toLocaleString("de-DE"),u:"",tr:""},
-  {l:"Aktive kcal",v:m.activeKcal,u:"kcal",tr:""},{l:"VO₂max",v:m.vo2max,u:"",tr:"↗ Ausdauer"},{l:"Gewicht",v:m.weight,u:"kg",tr:"↘ −0,6 kg/30T"}];
+function renderTiles(){ const m=state.metrics; const T=[{l:"Schritte",v:m.steps?m.steps.toLocaleString("de-DE"):"—",u:"",tr:""},
+  {l:"Aktive kcal",v:m.activeKcal||"—",u:m.activeKcal?"kcal":"",tr:""},{l:"VO₂max",v:m.vo2max||"—",u:"",tr:""},{l:"Gewicht",v:m.weight||"—",u:m.weight?"kg":"",tr:""}];
   document.getElementById("tiles").innerHTML=T.map(t=>`<div class="tile glass"><div class="tile-label">${t.l}</div><div class="tile-val">${t.v}<span class="tile-unit">${t.u}</span></div><div class="tile-trend">${t.tr}</div></div>`).join(""); }
 
 /* Charts (inline SVG, self-contained) */
@@ -779,6 +778,7 @@ function makeDailyMessage(){ const r=state.recovery.score,p=state.macros.protein
 function mealSuggestion(gap){ const opts=[["200 g Magerquark",24],["Whey-Shake (30 g)",24],["150 g Hähnchenbrust",35],["3 Eier",18],["200 g Skyr",20]];
   let sum=0,pick=[]; for(const[o,g] of opts){ if(sum>=gap) break; pick.push(o); sum+=g; } return pick.join(" + ")+` (~${sum} g Protein)`; }
 function makeCoachInsight(){ const r=state.recovery.score,s=state.sleep.score,p=state.macros.protein.t-state.macros.protein.v;
+  if(!s && !r && !state.calories.consumed) return {head:"Willkommen –\nleg los.",sub:"Trag deine Werte über ＋ ein oder importiere Apple Health. Deine Auswertung erscheint dann automatisch.",chips:[]};
   const head=r>=67?"Heute Vollgas –\ngrünes Licht.":r>=34?"Moderat trainieren –\nQualität vor Menge.":"Heute regenerieren –\nPause ist Training.";
   const sleepPhrase=s>=75?`Schlaf sitzt (Score ${s})`:`Schlaf mittelmäßig (Score ${s}) – heute früher ins Bett`;
   const proteinPhrase=p>0?`Noch ${p} g Protein offen: ${mealSuggestion(p)}.`:"Protein im grünen Bereich.";
@@ -827,7 +827,7 @@ document.getElementById("settingsSave").addEventListener("click",()=>{ state.api
   state.macros.protein.t=Number(document.getElementById("setProtein").value)||state.macros.protein.t;
   state.macros.carbs.t=Number(document.getElementById("setCarbs").value)||state.macros.carbs.t;
   state.macros.fat.t=Number(document.getElementById("setFat").value)||state.macros.fat.t; save(); applyGlass(); renderAll(); close("settingsOverlay"); });
-document.getElementById("resetDemo").addEventListener("click",()=>{ if(confirm("Alle Daten auf Demo zurücksetzen?")){ state=seedState(); save(); applyGlass(); renderAll(); close("settingsOverlay"); } });
+document.getElementById("resetDemo").addEventListener("click",()=>{ if(confirm("Alle Daten löschen und auf leer zurücksetzen?")){ state=seedState(); save(); applyGlass(); renderAll(); close("settingsOverlay"); } });
 /* Apple Health Import (export.xml) */
 function hkDate(s){ if(!s) return null; const m=/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}) ([+-])(\d{2})(\d{2})/.exec(s); if(!m) return null;
   const off=(+m[8]*60+ +m[9])*(m[7]==="-"?-1:1); return Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]) - off*60000; }
@@ -951,7 +951,7 @@ document.getElementById("barcodeScan").addEventListener("click",startScan);
 if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 
 function init(){ const g=new URLSearchParams(location.search).get("glass"); if(g==="1"||g==="2"||g==="3") state.glass=Number(g);
-  applyGlass(); document.getElementById("dateLine").textContent=new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"})+" · Demo-Daten";
+  applyGlass(); document.getElementById("dateLine").textContent=new Date().toLocaleDateString("de-DE",{weekday:"long",day:"numeric",month:"long"});
   renderAll(); Ticker.start(); if(state.reminders.enabled) scheduleReminders(); }
 init();
 </script>
