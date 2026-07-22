@@ -120,12 +120,13 @@
   .ring-svg { transform: rotate(-90deg); width: 100%; height: 100%; }
   .ring-track { fill: none; stroke: rgba(255,255,255,0.22); }
   .ring-fill { fill: none; stroke-linecap: round; transition: stroke-dashoffset 1s cubic-bezier(0.22,1,0.36,1); }
-  .ring-wrap { position: relative; width: 100%; max-width: 82px; aspect-ratio: 1; margin: 0 auto; display: grid; place-items: center; }
-  @media (min-width: 760px) { .ring-wrap { max-width: 116px; } }
+  .ring-wrap { position: relative; width: 100%; max-width: 92px; aspect-ratio: 1; margin: 0 auto; display: grid; place-items: center; }
+  @media (min-width: 760px) { .ring-wrap { max-width: 124px; } }
   .ring-value { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
   .ring-num { font-family: var(--num); font-size: clamp(16px, 5.1vw, 28px); font-weight: 700; letter-spacing: -0.03em; }
   .ring-unit { font-size: clamp(8px, 2.4vw, 10.5px); color: var(--text-tertiary); margin-top: 2px; }
   .ring-label { font-size: clamp(11px, 3vw, 13px); color: var(--text-secondary); font-weight: 500; }
+  .ring-prot { font-family: var(--num); font-size: clamp(9px, 2.7vw, 11px); font-weight: 700; color: #c7c7cc; margin-top: 2px; white-space: nowrap; }
 
   /* Körper-Modell */
   .body-svg { display: block; margin: 4px auto 0; max-width: 210px; width: 100%; }
@@ -495,21 +496,30 @@ const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 
 function applyGlass(){ document.body.classList.remove("glass-1","glass-2","glass-3"); document.body.classList.add("glass-"+state.glass); }
 
-function ringSVG(pct, gid){ const s=118,w=9,r=(s-w)/2,c=2*Math.PI*r,o=c*(1-Math.min(Math.max(pct,0),1));
+function ringSVG(pct, gid){ const s=118,w=12,r=(s-w)/2,c=2*Math.PI*r,o=c*(1-Math.min(Math.max(pct,0),1));
   return `<svg class="ring-svg" viewBox="0 0 ${s} ${s}"><defs><linearGradient id="${gid}" x1="0%" y1="0%" x2="100%" y2="100%">
     <stop offset="0%" stop-color="var(--blue-hi)"/><stop offset="100%" stop-color="var(--blue-lo)"/></linearGradient></defs>
     <circle class="ring-track" cx="${s/2}" cy="${s/2}" r="${r}" stroke-width="${w}"></circle>
     <circle class="ring-fill" cx="${s/2}" cy="${s/2}" r="${r}" stroke="url(#${gid})" stroke-width="${w}" stroke-dasharray="${c}" stroke-dashoffset="${o}"></circle></svg>`; }
+function ringSVGCal(kp,pp){ const s=118,cl=x=>Math.min(Math.max(x,0),1);
+  const oR=53,oW=12,oC=2*Math.PI*oR,oO=oC*(1-cl(kp)); const iR=37,iW=9,iC=2*Math.PI*iR,iO=iC*(1-cl(pp));
+  return `<svg class="ring-svg" viewBox="0 0 ${s} ${s}"><defs><linearGradient id="g_calories" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="var(--blue-hi)"/><stop offset="100%" stop-color="var(--blue-lo)"/></linearGradient></defs>
+    <circle class="ring-track" cx="59" cy="59" r="${oR}" stroke-width="${oW}"></circle>
+    <circle class="ring-fill" cx="59" cy="59" r="${oR}" stroke="url(#g_calories)" stroke-width="${oW}" stroke-dasharray="${oC}" stroke-dashoffset="${oO}"></circle>
+    <circle cx="59" cy="59" r="${iR}" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="${iW}"></circle>
+    <circle class="ring-fill" cx="59" cy="59" r="${iR}" stroke="#9a9aa0" stroke-width="${iW}" stroke-dasharray="${iC}" stroke-dashoffset="${iO}"></circle></svg>`; }
 function renderRings(){ const kL=Math.max(0,Math.round(state.calories.target-state.calories.consumed));
-  const R=[{key:"sleep",label:"Schlaf",pct:state.sleep.score/100,num:state.sleep.score,unit:"Score"},
-    {key:"recovery",label:"Erholung",pct:state.recovery.score/100,num:state.recovery.score+"%",unit:"Recovery"},
-    {key:"calories",label:"Kalorien",pct:state.calories.consumed/state.calories.target,num:kL,unit:"kcal übrig"}];
-  document.getElementById("rings").innerHTML=R.map(r=>`<div class="ring-block" data-ring="${r.key}"><div class="ring-wrap">${ringSVG(r.pct,"g_"+r.key)}
-    <div class="ring-value"><div><div class="ring-num">${r.num}</div><div class="ring-unit">${r.unit}</div></div></div></div><div class="ring-label">${r.label}</div></div>`).join("");
+  const pRem=Math.max(0,Math.round(state.macros.protein.t-state.macros.protein.v));
+  const blocks=[
+    {key:"sleep",label:"Schlaf",svg:ringSVG(state.sleep.score/100,"g_sleep"),center:`<div class="ring-num">${state.sleep.score}</div><div class="ring-unit">Score</div>`},
+    {key:"recovery",label:"Erholung",svg:ringSVG(state.recovery.score/100,"g_recovery"),center:`<div class="ring-num">${state.recovery.score}%</div><div class="ring-unit">Recovery</div>`},
+    {key:"calories",label:"Kalorien",svg:ringSVGCal(state.calories.consumed/state.calories.target, state.macros.protein.v/state.macros.protein.t),center:`<div class="ring-num">${kL}</div><div class="ring-unit">kcal übrig</div><div class="ring-prot">${pRem} g Protein</div>`}];
+  document.getElementById("rings").innerHTML=blocks.map(b=>`<div class="ring-block" data-ring="${b.key}"><div class="ring-wrap">${b.svg}<div class="ring-value"><div>${b.center}</div></div></div><div class="ring-label">${b.label}</div></div>`).join("");
   document.querySelectorAll(".ring-block").forEach(el=>el.addEventListener("click",()=>ringDetail(el.dataset.ring))); }
 function ringDetail(k){ const d={sleep:`Schlaf-Score ${state.sleep.score}/100\nDauer ${state.sleep.hours} h · Tief ${state.sleep.deep}% · REM ${state.sleep.rem}%`,
   recovery:`Erholung ${state.recovery.score}%\nHRV ${state.recovery.hrv} ms · Ruhepuls ${state.recovery.rhr} bpm`,
-  calories:`${state.calories.consumed} / ${state.calories.target} kcal\nNoch ${Math.max(0,state.calories.target-state.calories.consumed)} kcal`}[k]; alert(d); }
+  calories:`${state.calories.consumed} / ${state.calories.target} kcal · noch ${Math.max(0,state.calories.target-state.calories.consumed)} kcal\nProtein ${state.macros.protein.v} / ${state.macros.protein.t} g · noch ${Math.max(0,state.macros.protein.t-state.macros.protein.v)} g`}[k]; alert(d); }
 
 /* Körper-Modell – anatomische Muskel-Map */
 const B_HEAD='<ellipse cx="100" cy="32" rx="13" ry="16"/>';
