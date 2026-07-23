@@ -238,7 +238,10 @@
   /* Goals */
   .goal-add { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
   #goalInput { flex: 1 1 100%; min-width: 0; }
-  #goalRepeatBtn { flex: 0 0 auto; }
+  .goal-days { display: flex; gap: 5px; flex: 1 1 100%; }
+  .dchip { flex: 1 1 0; min-width: 0; border: 1px solid var(--hairline); background: rgba(255,255,255,0.04); color: var(--text-secondary); padding: 8px 0; border-radius: 9px; font-size: 12px; cursor: pointer; font-family: var(--font); text-align: center; }
+  .dchip.on { background: #F2F2F3; color: #0B0B0C; border-color: #F2F2F3; font-weight: 600; }
+  .goal-days-hint { font-size: 11px; color: var(--text-tertiary); margin: -6px 0 14px; }
   #goalAddBtn { flex: 1 1 auto; }
   .input { flex: 1; background: rgba(0,0,0,0.25); border: 1px solid var(--hairline); color: var(--text-primary);
     padding: 11px 13px; border-radius: 11px; font-family: var(--font); font-size: 14px; outline: none; }
@@ -320,7 +323,10 @@
 
   <div class="card glass">
     <div class="card-title">Ziele heute</div>
-    <div class="goal-add"><input class="input" id="goalInput" placeholder="Neues Ziel…" maxlength="80" /><button class="chip" id="goalRepeatBtn" title="Ziel jeden Tag wiederholen">Täglich</button><button class="btn small" id="goalAddBtn">Hinzufügen</button></div>
+    <div class="goal-add"><input class="input" id="goalInput" placeholder="Neues Ziel…" maxlength="80" />
+      <div class="goal-days" id="goalDays"><button class="dchip" data-d="0">Mo</button><button class="dchip" data-d="1">Di</button><button class="dchip" data-d="2">Mi</button><button class="dchip" data-d="3">Do</button><button class="dchip" data-d="4">Fr</button><button class="dchip" data-d="5">Sa</button><button class="dchip" data-d="6">So</button></div>
+      <button class="btn small" id="goalAddBtn">Hinzufügen</button></div>
+    <div class="goal-days-hint">Tage wählen = wiederholt sich · keins = nur heute</div>
     <div id="goalList"></div>
   </div>
 
@@ -490,9 +496,10 @@ function load(){ try{ const raw=localStorage.getItem(KEY); if(!raw) return seedS
   const d=seedState(); s.week=s.week||d.week; s.weightHistory=s.weightHistory||d.weightHistory;
   s.trainedDays=s.trainedDays||d.trainedDays; s.reminders=s.reminders||d.reminders; s.targetWeight=s.targetWeight||d.targetWeight;
   s.view=s.view||"front"; s.bodyMode=s.bodyMode||"today"; s.muscleToday=s.muscleToday||d.muscleToday; s.muscleMonth=Object.assign({},d.muscleMonth,s.muscleMonth||{});
-  s.goals=(s.goals||d.goals).map(g=>({repeat:false,...g})); s.goalsDay=s.goalsDay||d.goalsDay;
+  s.goals=(s.goals||d.goals).map(g=>{ const days=Array.isArray(g.days)?g.days:(g.repeat?[0,1,2,3,4,5,6]:[]); return {...g,days}; }); s.goalsDay=s.goalsDay||d.goalsDay;
   s.syncUrl=s.syncUrl||""; s.syncKey=s.syncKey||"";
-  const today=new Date().toDateString(); if(s.goalsDay!==today){ s.goalsDay=today; s.goals=s.goals.filter(g=>g.repeat); s.goals.forEach(g=>g.done=false); }
+  const today=new Date().toDateString(); if(s.goalsDay!==today){ s.goalsDay=today; const tw=(new Date().getDay()+6)%7;
+    s.goals=s.goals.filter(g=>g.days&&g.days.length); s.goals.forEach(g=>{ if(g.days.includes(tw)) g.done=false; }); }
   return s;
 } catch { return seedState(); } }
 function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
@@ -728,18 +735,23 @@ const ANALYSES=[
     {h:"Jetzt wichtig",items:[r>=67?"Heute hart trainieren – Erholung erlaubt es":r>=34?"Moderates Workout, Qualität vor Menge":"Regeneration priorisieren",pL>0?`Noch ${pL} g Protein auffüllen`:"Protein passt",`${state.metrics.steps.toLocaleString("de-DE")} Schritte – ${state.metrics.steps>=8000?"Ziel erreicht":"noch etwas bewegen"}`]}],note:DEMO}; }}
 ];
 
-function renderGoals(){ const list=document.getElementById("goalList");
-  if(!state.goals.length) list.innerHTML=`<div class="empty-hint">Noch keine Ziele – füg oben eins hinzu.</div>`;
-  else{ list.innerHTML=state.goals.map(g=>`<div class="goal-item" data-id="${g.id}"><div class="goal-check ${g.done?"done":""}">✓</div><div class="goal-txt ${g.done?"done":""}">${esc(g.text)}${g.repeat?'<span class="goal-tag">täglich</span>':''}</div><button class="goal-del" title="Löschen">×</button></div>`).join("");
+const DOW=["Mo","Di","Mi","Do","Fr","Sa","So"];
+function todayDow(){ return (new Date().getDay()+6)%7; } // Mo=0 … So=6
+function goalDays(g){ return Array.isArray(g.days)?g.days:(g.repeat?[0,1,2,3,4,5,6]:[]); }
+function goalActive(g){ const d=goalDays(g); return d.length ? d.includes(todayDow()) : true; }
+function goalTag(g){ const d=goalDays(g); if(!d.length) return ""; if(d.length===7) return "täglich"; return d.slice().sort((a,b)=>a-b).map(i=>DOW[i]).join(" "); }
+function renderGoals(){ const list=document.getElementById("goalList"); const vis=state.goals.filter(goalActive);
+  if(!vis.length) list.innerHTML=`<div class="empty-hint">Noch keine Ziele – füg oben eins hinzu.</div>`;
+  else{ list.innerHTML=vis.map(g=>{ const tag=goalTag(g); return `<div class="goal-item" data-id="${g.id}"><div class="goal-check ${g.done?"done":""}">✓</div><div class="goal-txt ${g.done?"done":""}">${esc(g.text)}${tag?`<span class="goal-tag">${tag}</span>`:""}</div><button class="goal-del" title="Löschen">×</button></div>`; }).join("");
     list.querySelectorAll(".goal-item").forEach(it=>{ const id=it.dataset.id; it.querySelector(".goal-check").addEventListener("click",()=>toggleGoal(id)); it.querySelector(".goal-del").addEventListener("click",()=>deleteGoal(id)); }); }
   save(); window.dispatchEvent(new CustomEvent("goals-changed")); }
-function addGoal(t){ t=t.trim(); if(!t) return; const rb=document.getElementById("goalRepeatBtn"), rep=rb&&rb.classList.contains("on");
-  state.goals.push({id:uid(),text:t,done:false,repeat:!!rep}); if(rb) rb.classList.remove("on"); renderGoals(); }
+function addGoal(t){ t=t.trim(); if(!t) return; const days=[...document.querySelectorAll("#goalDays .dchip.on")].map(c=>+c.dataset.d);
+  state.goals.push({id:uid(),text:t,done:false,days}); document.querySelectorAll("#goalDays .dchip.on").forEach(c=>c.classList.remove("on")); renderGoals(); }
 function toggleGoal(id){ const g=state.goals.find(x=>x.id===id); if(g) g.done=!g.done; renderGoals(); }
 function deleteGoal(id){ state.goals=state.goals.filter(x=>x.id!==id); renderGoals(); }
 
 const Ticker=(()=>{ const stage=document.getElementById("goalTickerStage"),meta=document.getElementById("goalTickerMeta"),root=document.getElementById("goalTicker"); let i=0,first=true,timer=null;
-  const build=()=>{ const g=state.goals,total=g.length,done=g.filter(x=>x.done).length; let items;
+  const build=()=>{ const g=state.goals.filter(goalActive),total=g.length,done=g.filter(x=>x.done).length; let items;
     if(!total) items=[{s:"empty",t:"Keine Ziele heute – füg eins hinzu."}]; else if(done===total) items=[{s:"done",t:"✓ Alle Ziele erledigt – starker Tag."}];
     else items=g.filter(x=>!x.done).map(x=>({s:"pending",t:x.text})); return{items,done,total}; };
   const gl=s=>s==="done"?"✓":s==="pending"?"○":"·";
@@ -821,7 +833,7 @@ document.getElementById("chatClose").addEventListener("click",()=>close("chatOve
 document.getElementById("chatSend").addEventListener("click",sendChat);
 document.getElementById("chatField").addEventListener("keydown",e=>{ if(e.key==="Enter") sendChat(); });
 document.getElementById("regenBtn").addEventListener("click",()=>{ state.coachMessage=""; renderCoach(); });
-document.getElementById("goalRepeatBtn").addEventListener("click",e=>e.currentTarget.classList.toggle("on"));
+document.querySelectorAll("#goalDays .dchip").forEach(c=>c.addEventListener("click",()=>c.classList.toggle("on")));
 document.getElementById("goalAddBtn").addEventListener("click",()=>{ const i=document.getElementById("goalInput"); addGoal(i.value); i.value=""; });
 document.getElementById("goalInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ addGoal(e.target.value); e.target.value=""; } });
 document.getElementById("settingsBtn").addEventListener("click",()=>{ document.getElementById("apiKeyField").value=state.apiKey||"";
