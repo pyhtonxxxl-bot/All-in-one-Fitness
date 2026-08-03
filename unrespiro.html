@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="unrespiro">
+<meta name="theme-color" content="#000000">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23000'/%3E%3Ccircle cx='90' cy='90' r='55' fill='none' stroke='%232ecc71' stroke-width='14' stroke-dasharray='260 346' stroke-linecap='round' transform='rotate(-90 90 90)'/%3E%3Ccircle cx='90' cy='90' r='55' fill='none' stroke='%23ff2d55' stroke-width='14' stroke-dasharray='86 346' stroke-dashoffset='-262' stroke-linecap='round' transform='rotate(-90 90 90)'/%3E%3C/svg%3E">
+<title>unrespiro</title>
+<style>
+:root{
+  --bg:#000;
+  --card:#1c1c1e;
+  --card2:#141416;
+  --card3:#242426;
+  --text:#fff;
+  --muted:#8e8e93;
+  --muted2:#636366;
+  --green:#34c759;
+  --green-soft:#7fe0a0;
+  --red:#ff2d55;
+  --red-soft:#ff375f;
+  --line:rgba(255,255,255,.07);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;
+  overflow:hidden;
+  position:fixed;inset:0;
+  -webkit-font-smoothing:antialiased;
+}
+#app{height:100%;display:flex;flex-direction:column;max-width:100%;overflow-x:hidden;}
+.screen{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding:0 20px calc(120px + env(safe-area-inset-bottom));
+  padding-top:calc(14px + env(safe-area-inset-top));
+  display:none;
+}
+.screen.active{display:block;animation:fade .25s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* subtle background rings behind hero */
+.hero-bg{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none;}
+.hero-bg span{position:absolute;border-radius:50%;border:1px solid rgba(255,255,255,.03);
+  background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.025),transparent 70%);}
+
+/* Header */
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;position:relative;z-index:2;}
+.logo{font-size:23px;font-weight:800;letter-spacing:-.5px;}
+.logo b{font-weight:800;color:#fff}
+.logo span{font-weight:400;color:#fff;opacity:.92}
+.top-icons{display:flex;gap:16px;align-items:center;}
+.icn{width:30px;height:30px;color:#d6d6d8;display:flex;align-items:center;justify-content:center;}
+.icn svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;}
+
+/* day nav */
+.daynav{display:flex;align-items:center;justify-content:center;gap:auto;position:relative;margin:10px 0 4px;z-index:2;height:26px;}
+.daynav .arrow{position:absolute;color:#48484a;font-size:26px;line-height:1;}
+.daynav .arrow.l{left:0}.daynav .arrow.r{right:0}
+.daynav .lbl{font-weight:700;font-size:16px;}
+
+/* Ring hero */
+.hero{position:relative;display:flex;align-items:center;gap:2px;margin:18px 0 6px;z-index:2;min-height:190px;}
+.ring-wrap{position:relative;width:186px;height:186px;flex:none;margin-left:-8px;}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ring-center small{font-size:14px;font-weight:600;color:#e8e8ea;margin-bottom:2px}
+.ring-center b{font-size:40px;font-weight:800;letter-spacing:-1px}
+.hero-right{flex:1;padding-left:10px;min-width:0;}
+.hero-right .k{color:var(--muted);font-size:16px;line-height:1.15;font-weight:500}
+.hero-right .v{font-size:27px;font-weight:800;letter-spacing:-.5px;margin:2px 0 18px;white-space:nowrap}
+.hero-right .v.small{font-size:22px}
+
+/* Cards grid */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:8px}
+.grid>.card{min-width:0}
+.card{background:var(--card);border-radius:22px;padding:18px;position:relative;}
+.card.tall{min-height:150px;display:flex;flex-direction:column;}
+.card .lab{color:var(--muted);font-size:15px;font-weight:500}
+.card .big{font-size:29px;font-weight:800;letter-spacing:-.5px;margin-top:2px}
+.card .sub{color:var(--muted);font-size:14px;font-weight:700;margin-top:auto;padding-top:14px}
+.card.center{align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:17px;font-weight:500}
+.mini-cal{position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:7px;color:var(--green);}
+.mini-cal svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.7}
+
+/* detox card */
+.detox .badge{margin-top:auto;display:flex;align-items:center;justify-content:center;gap:8px;padding-top:14px}
+.detox .badge .date{color:var(--muted);font-size:13px;font-weight:600}
+.detox .badge .amt{color:#e9b64d;font-weight:800;font-size:17px}
+.laurel{color:#e9b64d;font-size:20px;opacity:.9}
+
+/* chart */
+.chart{height:150px;display:flex;align-items:flex-end;gap:2px;padding:10px 4px 0;position:relative}
+.chart .zero{position:absolute;left:0;right:0;top:52%;height:1px;background:rgba(255,255,255,.08)}
+.chart .bar{flex:1;border-radius:2px;position:relative;align-self:center;}
+.chart-x{display:flex;justify-content:space-between;color:var(--muted2);font-size:12px;margin-top:6px;padding:0 2px}
+
+/* app list */
+.section-title{font-size:22px;font-weight:800;margin:26px 2px 14px;letter-spacing:-.4px}
+.applist{background:var(--card);border-radius:22px;overflow:hidden}
+.approw{display:flex;align-items:center;gap:14px;padding:15px 16px;border-bottom:1px solid var(--line)}
+.approw:last-child{border-bottom:none}
+.appicon{width:44px;height:44px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;overflow:hidden}
+.appmeta{flex:1;min-width:0}
+.appmeta .n{font-size:19px;font-weight:600}
+.appmeta .cat{font-size:15px;font-weight:600;margin-top:2px;display:inline-flex;align-items:center;gap:4px}
+.cat.prod{color:var(--green)}
+.cat.unprod{color:var(--red)}
+.cat.neutral{color:var(--muted)}
+.cat .chev{font-size:11px;opacity:.8}
+.apptime{font-size:19px;font-weight:800;white-space:nowrap}
+.add-app{width:100%;padding:15px;border-radius:16px;background:var(--card3);color:#fff;font-size:16px;font-weight:600;border:none;margin-top:14px}
+
+/* Buttons row (routine top) */
+.tiles2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:14px}
+.tile{background:var(--card);border-radius:22px;padding:26px 18px;text-align:center;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.tile .ti{font-size:34px;color:#fff;line-height:1}
+.tile .tt{font-size:22px;font-weight:600;letter-spacing:-.3px}
+.tile svg{width:34px;height:34px;stroke:#fff;fill:none;stroke-width:1.7}
+
+.empty-dash{border:1.5px dashed #38383a;border-radius:22px;padding:60px 20px;text-align:center;color:#c7c7cc;font-size:18px;margin-top:14px}
+
+.retos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:14px}
+.reto{background:var(--card);border-radius:18px;padding:34px 10px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:800;font-size:19px}
+
+/* Profile */
+.prof-av{width:120px;height:120px;margin:14px auto 0;color:#fff}
+.prof-av svg{width:120px;height:120px;stroke:currentColor;fill:none;stroke-width:1.5}
+.since{text-align:center;color:#e8e8ea;font-weight:700;margin-top:18px;font-size:16px}
+.progress-btn{display:block;margin:14px auto 0;background:linear-gradient(120deg,#0f3d24,#1f7a45);border:none;color:#fff;font-weight:700;font-size:17px;padding:12px 22px;border-radius:14px}
+.stat2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:24px}
+.stat2 .card{padding:22px 18px;min-height:120px;display:flex;flex-direction:column;justify-content:center}
+.stat2 .card b{font-size:30px;font-weight:800}
+.stat2 .card small{color:var(--muted);font-size:14px;margin-top:8px}
+.acc{background:var(--card);border-radius:20px;margin-top:22px;overflow:hidden}
+.acc-row{display:flex;align-items:center;gap:12px;padding:20px 18px;font-size:20px;font-weight:700}
+.acc-row .chev{margin-left:auto;color:var(--muted);transition:.2s}
+.acc-row+.acc-row{border-top:1px solid var(--line)}
+.acc-body{padding:0 18px;max-height:0;overflow:hidden;transition:.25s;color:var(--muted);font-size:15px;line-height:1.5}
+.acc-body.open{max-height:400px;padding:0 18px 18px}
+.acc-icon{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:1.8}
+.refresh{width:100%;margin-top:22px;background:var(--card3);border:none;color:#fff;font-weight:700;font-size:19px;padding:20px;border-radius:16px;display:flex;align-items:center;justify-content:center;gap:10px}
+.founder{background:var(--card);border-radius:20px;padding:22px;margin-top:22px}
+.founder h4{font-size:19px;font-weight:800;margin-bottom:12px}
+.founder p{color:#c7c7cc;font-size:16px;line-height:1.55}
+
+/* Progress card screen */
+.pc-wrap{padding-top:40px}
+.pcard{border-radius:26px;padding:26px;min-height:400px;display:flex;flex-direction:column;
+  background:radial-gradient(120% 90% at 50% 0%,#1f9d57 0%,#0b3a22 45%,#0a0f0c 100%);
+  position:relative;overflow:hidden}
+.pcard .brand{font-size:22px;font-weight:800}
+.pcard .rec{margin-top:auto}
+.pcard .rec .l{font-size:20px;color:#eafff2;font-weight:500}
+.pcard .rec .b{font-size:46px;font-weight:800;color:#3ff08a;margin-top:4px}
+.pcard .since2{align-self:flex-end;margin-top:26px;background:#0c0c0e;padding:12px 18px;border-radius:12px;font-size:14px;color:#c7c7cc}
+.pcard .since2 b{color:#fff}
+
+/* Focus sheet / create */
+.sheet-field{background:var(--card2);border-radius:18px;padding:14px;display:flex;align-items:center;gap:12px;margin-top:16px}
+.sheet-field .fi{width:52px;height:52px;border-radius:12px;background:#2a2a2c;display:flex;align-items:center;justify-content:center;font-size:26px;flex:none}
+.sheet-field input{flex:1;background:#000;border:none;color:#fff;font-size:19px;padding:14px 16px;border-radius:12px;font-family:inherit}
+.row-btn{background:var(--card);border-radius:18px;padding:20px 18px;display:flex;align-items:center;justify-content:space-between;margin-top:14px;font-size:20px;font-weight:700}
+.row-btn .chev{color:var(--muted);font-size:20px}
+.dur{background:var(--card);border-radius:18px;padding:18px;margin-top:14px}
+.dur h3{font-size:22px;font-weight:800;margin-bottom:14px}
+.dur-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.dur-col label{color:var(--muted);font-size:15px;display:block;margin-bottom:6px}
+.dur-col input{width:100%;background:var(--card3);border:none;color:#fff;font-size:26px;font-weight:700;text-align:center;padding:16px;border-radius:12px;font-family:inherit}
+.toggle-row{background:var(--card);border-radius:18px;padding:18px;margin-top:14px;display:flex;align-items:center;justify-content:space-between}
+.toggle-row .t{font-size:20px;font-weight:800}
+.toggle-row .s{color:var(--muted);font-size:14px;margin-top:2px}
+.sw{width:52px;height:32px;border-radius:20px;background:#39393d;position:relative;flex:none;transition:.2s}
+.sw.on{background:var(--green)}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:.2s}
+.sw.on::after{left:23px}
+.hint{color:var(--muted);font-size:15px;margin-top:14px;display:flex;gap:8px;line-height:1.4}
+.big-start{position:fixed;left:20px;right:20px;bottom:calc(96px + env(safe-area-inset-bottom));background:#fff;color:#000;border:none;padding:20px;border-radius:18px;font-size:19px;font-weight:800;z-index:30}
+
+.tpl-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:8px}
+.tpl{background:var(--card3);border-radius:16px;padding:16px 10px;text-align:center;font-weight:700;font-size:16px}
+.tpl .e{font-size:26px;display:block;margin-bottom:8px}
+
+/* Bottom nav */
+.tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:space-around;align-items:center;
+  padding:12px 0 calc(10px + env(safe-area-inset-bottom));
+  background:rgba(12,12,14,.82);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-top:1px solid rgba(255,255,255,.06);z-index:40}
+.tab{display:flex;flex-direction:column;align-items:center;gap:5px;color:#6a6a6e;font-size:12px;font-weight:600;flex:1}
+.tab svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8}
+.tab.on{color:#fff}
+.tab.on svg{stroke:#fff}
+
+/* Modal / sheet overlay */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60;display:none;align-items:flex-end;}
+.overlay.open{display:flex;animation:fade .2s}
+.modal{background:#161618;width:100%;border-radius:24px 24px 0 0;padding:22px 20px calc(30px + env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto;animation:up .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+.grip{width:40px;height:5px;border-radius:3px;background:#48484a;margin:0 auto 16px}
+.modal h2{font-size:22px;font-weight:800;margin-bottom:4px}
+.modal p.d{color:var(--muted);font-size:15px;margin-bottom:16px}
+.seg{display:flex;gap:8px;margin:14px 0}
+.seg button{flex:1;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:#fff;font-weight:700;font-size:15px}
+.seg button.sel.prod{background:rgba(52,199,89,.18);border-color:var(--green);color:var(--green)}
+.seg button.sel.unprod{background:rgba(255,45,85,.16);border-color:var(--red);color:var(--red)}
+.seg button.sel.neutral{background:rgba(142,142,147,.2);border-color:var(--muted);color:#fff}
+.field{margin-top:12px}
+.field label{color:var(--muted);font-size:14px;display:block;margin-bottom:6px}
+.field input{width:100%;background:var(--card2);border:1px solid var(--line);color:#fff;font-size:17px;padding:14px;border-radius:12px;font-family:inherit}
+.modal-actions{display:flex;gap:12px;margin-top:20px}
+.btn{flex:1;padding:16px;border-radius:14px;border:none;font-weight:800;font-size:16px}
+.btn.primary{background:#fff;color:#000}
+.btn.ghost{background:var(--card3);color:#fff}
+.btn.danger{background:rgba(255,45,85,.16);color:var(--red)}
+
+/* focus running overlay */
+.focus-run{position:fixed;inset:0;background:#000;z-index:80;display:none;flex-direction:column;align-items:center;justify-content:center;padding:30px;text-align:center}
+.focus-run.open{display:flex;animation:fade .3s}
+.focus-run .fr-name{font-size:20px;color:var(--muted);font-weight:600}
+.focus-run .fr-ring{margin:30px 0}
+.focus-run .fr-time{font-size:64px;font-weight:800;letter-spacing:-2px}
+.focus-run .fr-sub{color:var(--muted);margin-top:6px}
+.focus-run .fr-btn{margin-top:44px;background:var(--card3);color:#fff;border:none;padding:16px 40px;border-radius:16px;font-weight:800;font-size:17px}
+.focus-run .fr-btn.strict{opacity:.4}
+
+.toast{position:fixed;left:50%;top:calc(20px + env(safe-area-inset-top));transform:translateX(-50%);background:#2c2c2e;color:#fff;padding:12px 20px;border-radius:14px;font-weight:600;font-size:15px;z-index:100;opacity:0;pointer-events:none;transition:.3s;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.back{position:absolute;left:16px;top:calc(16px + env(safe-area-inset-top));color:#fff;font-size:30px;z-index:5;background:none;border:none}
+.center-title{text-align:center;font-weight:800;font-size:19px;padding-top:calc(16px + env(safe-area-inset-top));margin-bottom:10px}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HOME / INICIO -->
+  <div class="screen active" id="s-home">
+    <div class="hero-bg">
+      <span style="width:520px;height:520px;left:-120px;top:60px"></span>
+      <span style="width:360px;height:360px;left:-40px;top:120px"></span>
+      <span style="width:220px;height:220px;left:20px;top:180px"></span>
+    </div>
+    <div class="top">
+      <div class="logo"><b>unre</b><span>spiro</span></div>
+      <div class="top-icons">
+        <div class="icn" onclick="toast('Einstellungen')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+        <div class="icn" onclick="go('profile')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+      </div>
+    </div>
+
+    <div class="daynav"><span class="arrow l">‹</span><span class="lbl">Heute</span><span class="arrow r">›</span></div>
+
+    <div class="hero">
+      <div class="ring-wrap">
+        <svg width="100%" height="100%" viewBox="0 0 210 210">
+          <circle cx="105" cy="105" r="88" fill="none" stroke="#2a2a2c" stroke-width="14"/>
+          <circle id="ring-green" cx="105" cy="105" r="88" fill="none" stroke="url(#g)" stroke-width="14" stroke-linecap="round" transform="rotate(-90 105 105)"/>
+          <circle id="ring-red" cx="105" cy="105" r="88" fill="none" stroke="url(#r)" stroke-width="14" stroke-linecap="round" transform="rotate(-90 105 105)"/>
+          <defs>
+            <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7fe0a0"/><stop offset="1" stop-color="#34c759"/></linearGradient>
+            <linearGradient id="r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff2d55"/><stop offset="1" stop-color="#ff375f"/></linearGradient>
+          </defs>
+        </svg>
+        <div class="ring-center"><small>Produktivität</small><b id="prodPct" style="color:var(--red)">0%</b></div>
+      </div>
+      <div class="hero-right">
+        <div class="k">Unproduktive<br>Zeit</div>
+        <div class="v" id="unprodTime">0h 00min</div>
+        <div class="k">Gesamtzeit</div>
+        <div class="v small" id="totalTime">0h 00min</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card tall">
+        <div class="lab">Zeit ohne Handy</div>
+        <div class="big" id="noPhone">24h 00min</div>
+        <div class="sub" id="noPhonePct">100% des Tages</div>
+      </div>
+      <div class="card tall center">
+        <div class="mini-cal"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></div>
+        <div id="routineState">Keine aktive<br>Routine</div>
+      </div>
+      <div class="card tall detox">
+        <div class="lab">Bester Detox heute</div>
+        <div class="big" id="detoxBest">0h 0m</div>
+        <div class="badge"><span class="laurel">🌿</span><div style="text-align:center"><div class="date" id="detoxDate">–</div><div class="amt" id="detoxAmt">0h 0m</div></div><span class="laurel" style="transform:scaleX(-1)">🌿</span></div>
+      </div>
+      <div class="card tall" style="padding:14px 12px">
+        <div class="chart" id="chart"><div class="zero"></div></div>
+        <div class="chart-x"><span>0</span><span>6</span><span>12</span><span>18</span></div>
+      </div>
+    </div>
+
+    <div class="section-title">Meine Apps</div>
+    <div class="applist" id="applist"></div>
+    <button class="add-app" onclick="openAddApp()">+ App hinzufügen</button>
+  </div>
+
+  <!-- ROUTINE -->
+  <div class="screen" id="s-routine">
+    <div class="top">
+      <div class="logo"><b>unre</b><span>spiro</span></div>
+      <div class="top-icons">
+        <div class="icn" onclick="toast('Einstellungen')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+        <div class="icn" onclick="go('profile')"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+      </div>
+    </div>
+    <div class="tiles2">
+      <div class="tile" onclick="go('create')"><div class="ti">+</div><div class="tt">Routine<br>erstellen</div></div>
+      <div class="tile" onclick="toast('Geplante Routinen')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><div class="tt">Geplant</div></div>
+    </div>
+    <div class="section-title">Aktive Routinen</div>
+    <div class="empty-dash">Gerade sind keine<br>Routinen aktiv</div>
+    <div class="section-title">Herausforderungen</div>
+    <div class="retos">
+      <div class="reto" onclick="startChallenge('24 Stunden')"><span class="laurel">🌿</span>24 Stunden<span class="laurel" style="transform:scaleX(-1)">🌿</span></div>
+      <div class="reto" onclick="startChallenge('48 Stunden')"><span class="laurel">🌿</span>48 Stunden<span class="laurel" style="transform:scaleX(-1)">🌿</span></div>
+      <div class="reto" onclick="startChallenge('7 Tage')"><span class="laurel">🌿</span>7 Tage<span class="laurel" style="transform:scaleX(-1)">🌿</span></div>
+      <div class="reto" onclick="startChallenge('30 Tage')"><span class="laurel">🌿</span>30 Tage<span class="laurel" style="transform:scaleX(-1)">🌿</span></div>
+    </div>
+  </div>
+
+  <!-- CREATE / FOCUS -->
+  <div class="screen" id="s-create">
+    <div class="center-title">Fokus starten</div>
+    <div class="tpl-grid">
+      <div class="tpl" onclick="setFocusName('Fokus')"><span class="e">📈</span>Fokus</div>
+      <div class="tpl" onclick="setFocusName('Lernen')"><span class="e">📚</span>Lernen</div>
+      <div class="tpl" onclick="setFocusName('Gym')"><span class="e">💪</span>Gym</div>
+    </div>
+    <div class="sheet-field">
+      <div class="fi">📈</div>
+      <input id="focusName" placeholder="Name" value="Fokus">
+    </div>
+    <div class="row-btn" onclick="openSelectApps()"><span>Apps auswählen</span><span class="chev">›</span></div>
+    <div class="dur">
+      <h3>Dauer</h3>
+      <div class="dur-grid">
+        <div class="dur-col"><label>Stunden</label><input id="durH" type="number" min="0" max="12" value="0" inputmode="numeric"></div>
+        <div class="dur-col"><label>Minuten</label><input id="durM" type="number" min="0" max="59" value="25" inputmode="numeric"></div>
+      </div>
+    </div>
+    <div class="toggle-row" onclick="toggleStrict()">
+      <div><div class="t">Strikter Modus</div><div class="s">Strikt</div></div>
+      <div class="sw on" id="strictSw"></div>
+    </div>
+    <div class="hint"><span>ⓘ</span><span>Du kannst die Sperre nicht deaktivieren oder eine Pause machen.</span></div>
+    <button class="big-start" onclick="startFocus()">Sperre starten</button>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="screen" id="s-profile">
+    <button class="back" onclick="go('home')">‹</button>
+    <div class="prof-av"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="56"/><circle cx="60" cy="46" r="20"/><path d="M26 100c4-18 20-26 34-26s30 8 34 26"/></svg></div>
+    <div class="since" id="since">Seit 02. August 2026</div>
+    <button class="progress-btn" onclick="go('progress')">🪪 Fortschrittskarte</button>
+    <div class="stat2">
+      <div class="card"><b id="savedTotal">0h 0m</b><small>Gesamt gesparte Zeit</small></div>
+      <div class="card"><b id="avgProd">–</b><small>Durchschn. Produktivität</small></div>
+    </div>
+    <div class="acc">
+      <div class="acc-row" onclick="toggleAcc(this)"><svg class="acc-icon" viewBox="0 0 24 24"><line x1="4" y1="8" x2="20" y2="8"/><circle cx="9" cy="8" r="2.5" fill="#161618"/><line x1="4" y1="16" x2="20" y2="16"/><circle cx="15" cy="16" r="2.5" fill="#161618"/></svg>Einstellungen<span class="chev">⌄</span></div>
+      <div class="acc-body">Sprache: Deutsch · Benachrichtigungen · Tagesziel für Produktivität · Design.</div>
+      <div class="acc-row" onclick="toggleAcc(this)"><svg class="acc-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3 2.4c-.8.3-1 .8-1 1.6"/><circle cx="12" cy="16.5" r=".6" fill="#fff"/></svg>Support<span class="chev">⌄</span></div>
+      <div class="acc-body">Fragen? Schreib uns. FAQ, Kontakt und Feedback.</div>
+    </div>
+    <button class="refresh" onclick="toast('System aktualisiert')"><span style="font-size:22px">↻</span> System aktualisieren</button>
+    <div class="hint" style="margin-top:12px"><span>ⓘ</span><span>Wenn deine Sperren nicht richtig funktionieren, liegt es an der Bildschirmzeit-Verwaltung von Apple – aktualisiere das System, um es zu beheben.</span></div>
+    <div class="founder">
+      <h4>Vom Gründer</h4>
+      <p>Ich weiß nicht, wer du bist (ja, du, der das gerade liest). Aber danke von ganzem Herzen.</p>
+    </div>
+  </div>
+
+  <!-- PROGRESS CARD -->
+  <div class="screen pc-wrap" id="s-progress">
+    <button class="back" onclick="go('profile')">‹</button>
+    <div class="center-title">Fortschrittskarte</div>
+    <div class="pcard">
+      <div class="brand"><b>unre</b>spiro</div>
+      <div class="rec">
+        <div class="l">Zurückgewonnene Zeit</div>
+        <div class="b" id="recovered">0h 0m</div>
+      </div>
+      <div class="since2">Seit <b>Aug. 2026</b></div>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <nav class="tabbar">
+    <div class="tab" id="t-routine" onclick="go('routine')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Routine</div>
+    <div class="tab on" id="t-home" onclick="go('home')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/></svg>Start</div>
+    <div class="tab" id="t-create" onclick="go('create')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Erstellen</div>
+  </nav>
+</div>
+
+<!-- ADD/EDIT APP MODAL -->
+<div class="overlay" id="ov-app">
+  <div class="modal">
+    <div class="grip"></div>
+    <h2 id="appModalTitle">App hinzufügen</h2>
+    <p class="d">Lege fest, ob die App produktiv, unproduktiv oder neutral ist.</p>
+    <div class="field"><label>Name</label><input id="mName" placeholder="z.B. TikTok"></div>
+    <div class="field"><label>Symbol (Emoji)</label><input id="mEmoji" placeholder="📱" maxlength="2"></div>
+    <div class="field"><label>Heute genutzt (Minuten)</label><input id="mMin" type="number" min="0" placeholder="0" inputmode="numeric"></div>
+    <div class="field"><label>Kategorie</label>
+      <div class="seg" id="mSeg">
+        <button data-c="prod" onclick="segPick('prod')">Produktiv</button>
+        <button data-c="unprod" onclick="segPick('unprod')">Unproduktiv</button>
+        <button data-c="neutral" onclick="segPick('neutral')">Neutral</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" id="mDelete" onclick="deleteApp()" style="display:none">Löschen</button>
+      <button class="btn primary" onclick="saveApp()">Speichern</button>
+    </div>
+    <button class="btn" style="width:100%;margin-top:10px;background:none;color:var(--muted)" onclick="closeOverlay()">Abbrechen</button>
+  </div>
+</div>
+
+<!-- FOCUS RUNNING -->
+<div class="focus-run" id="focusRun">
+  <div class="fr-name" id="frName">Fokus</div>
+  <div class="fr-ring">
+    <svg width="240" height="240" viewBox="0 0 240 240">
+      <circle cx="120" cy="120" r="104" fill="none" stroke="#1c1c1e" stroke-width="12"/>
+      <circle id="frRing" cx="120" cy="120" r="104" fill="none" stroke="#34c759" stroke-width="12" stroke-linecap="round" transform="rotate(-90 120 120)"/>
+    </svg>
+    <div style="margin-top:-160px">
+      <div class="fr-time" id="frTime">25:00</div>
+      <div class="fr-sub" id="frSub">Bleib fokussiert 🌿</div>
+    </div>
+    <div style="height:90px"></div>
+  </div>
+  <button class="fr-btn" id="frBtn" onclick="stopFocus()">Beenden</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DAY_MIN = 24*60;
+const store = {
+  load(){ try{return JSON.parse(localStorage.getItem('unrespiro')||'null')}catch(e){return null} },
+  save(s){ localStorage.setItem('unrespiro', JSON.stringify(s)) }
+};
+let state = store.load() || {
+  apps:[
+    {id:1,name:'TikTok',emoji:'🎵',color:'#000',cat:'unprod',sec:2*3600+7*60},
+    {id:2,name:'Snapchat',emoji:'👻',color:'#FFFC00',cat:'unprod',sec:35*60+43},
+    {id:3,name:'Chat',emoji:'💬',color:'#34c759',cat:'prod',sec:19*60+16},
+    {id:4,name:'CapCut',emoji:'🎬',color:'#111',cat:'prod',sec:14*60+23},
+    {id:5,name:'Instagram',emoji:'📸',color:'#C13584',cat:'unprod',sec:12*60+59},
+    {id:6,name:'Pinterest',emoji:'📌',color:'#E60023',cat:'unprod',sec:9*60+35},
+  ],
+  focusTotalSec:0,
+  bestDetoxSec:2*3600+20*60,
+  strict:true,
+  focusName:'Fokus',
+  sessions:[]
+};
+function persist(){ store.save(state); }
+
+/* ---------- rendering ---------- */
+function fmtHM(sec){ const m=Math.round(sec/60); const h=Math.floor(m/60); return h+'h '+String(m%60).padStart(2,'0')+'min'; }
+function fmtHm(sec){ const m=Math.round(sec/60); const h=Math.floor(m/60); return h+'h '+(m%60)+'m'; }
+
+function computeRing(){
+  let prod=0, unprod=0;
+  state.apps.forEach(a=>{ if(a.cat==='prod')prod+=a.sec; else if(a.cat==='unprod')unprod+=a.sec; });
+  const total = prod+unprod;
+  const pct = total>0 ? Math.round(prod/total*100) : 0;
+  return {prod,unprod,total,pct};
+}
+
+function render(){
+  const {prod,unprod,total,pct} = computeRing();
+  // ring
+  const C = 2*Math.PI*88;
+  const green = pct/100, red = 1-green;
+  const rg = document.getElementById('ring-green');
+  const rr = document.getElementById('ring-red');
+  rg.setAttribute('stroke-dasharray', (C*green)+' '+C);
+  rr.setAttribute('stroke-dasharray', (C*red)+' '+C);
+  rr.setAttribute('stroke-dashoffset', -(C*green));
+  const pctEl=document.getElementById('prodPct');
+  pctEl.textContent = pct+'%';
+  pctEl.style.color = pct>=50 ? 'var(--green)' : 'var(--red)';
+
+  document.getElementById('unprodTime').textContent = fmtHM(unprod);
+  document.getElementById('totalTime').textContent = fmtHM(total);
+
+  const noPhoneSec = Math.max(0, DAY_MIN*60 - total);
+  document.getElementById('noPhone').textContent = fmtHM(noPhoneSec);
+  document.getElementById('noPhonePct').textContent = Math.round(noPhoneSec/(DAY_MIN*60)*100)+'% des Tages';
+
+  document.getElementById('detoxBest').textContent = fmtHm(state.bestDetoxSec);
+  document.getElementById('detoxAmt').textContent = fmtHm(state.bestDetoxSec);
+  document.getElementById('detoxDate').textContent = new Date().toLocaleDateString('de-DE');
+
+  // app list
+  const list = document.getElementById('applist');
+  list.innerHTML = state.apps.slice().sort((a,b)=>b.sec-a.sec).map(a=>{
+    const catTxt = a.cat==='prod'?'Produktiv':a.cat==='unprod'?'Unproduktiv':'Neutral';
+    return `<div class="approw" onclick="editApp(${a.id})">
+      <div class="appicon" style="background:${a.color}">${a.emoji}</div>
+      <div class="appmeta"><div class="n">${a.name}</div>
+      <div class="cat ${a.cat}" onclick="event.stopPropagation();cycleCat(${a.id})">${catTxt} <span class="chev">▾</span></div></div>
+      <div class="apptime">${fmtHm(a.sec)}</div></div>`;
+  }).join('');
+
+  renderChart(pct);
+
+  // profile
+  document.getElementById('savedTotal').textContent = fmtHm(state.focusTotalSec);
+  document.getElementById('avgProd').textContent = total>0 ? pct+'%' : '–';
+  document.getElementById('recovered').textContent = fmtHm(state.focusTotalSec);
+}
+
+function renderChart(pct){
+  const chart = document.getElementById('chart');
+  chart.querySelectorAll('.bar').forEach(b=>b.remove());
+  // deterministic-ish 24 bars, greener as productivity rises
+  let seed = 7;
+  const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280;};
+  for(let i=0;i<24;i++){
+    const bar=document.createElement('div');
+    const mag = Math.round(6+rnd()*60);
+    const productive = rnd() < (pct/100)*0.9+0.1;
+    bar.className='bar';
+    bar.style.height=mag+'px';
+    if(productive){ bar.style.background='#34c759'; bar.style.alignSelf='flex-end'; bar.style.marginBottom='47%'; }
+    else { bar.style.background='#ff2d55'; bar.style.alignSelf='flex-start'; bar.style.marginTop='47%'; }
+    if(rnd()<0.12){ bar.style.background='#8e8e93'; }
+    chart.appendChild(bar);
+  }
+}
+
+/* ---------- navigation ---------- */
+const screens=['home','routine','create','profile','progress'];
+function go(name){
+  screens.forEach(s=>document.getElementById('s-'+s).classList.toggle('active', s===name));
+  ['home','routine','create'].forEach(t=>{
+    const el=document.getElementById('t-'+t); if(el) el.classList.toggle('on', t===name);
+  });
+  document.querySelectorAll('.screen').forEach(s=>s.scrollTop=0);
+  render();
+}
+
+/* ---------- app CRUD ---------- */
+let editingId=null, segChoice='unprod';
+function segPick(c){ segChoice=c; document.querySelectorAll('#mSeg button').forEach(b=>{
+  b.className=''; if(b.dataset.c===c) b.className='sel '+c; }); }
+function openAddApp(){
+  editingId=null; segChoice='unprod';
+  document.getElementById('appModalTitle').textContent='App hinzufügen';
+  document.getElementById('mName').value='';
+  document.getElementById('mEmoji').value='';
+  document.getElementById('mMin').value='';
+  document.getElementById('mDelete').style.display='none';
+  segPick('unprod');
+  openOverlay();
+}
+function editApp(id){
+  const a=state.apps.find(x=>x.id===id); if(!a)return;
+  editingId=id; segChoice=a.cat;
+  document.getElementById('appModalTitle').textContent='App bearbeiten';
+  document.getElementById('mName').value=a.name;
+  document.getElementById('mEmoji').value=a.emoji;
+  document.getElementById('mMin').value=Math.round(a.sec/60);
+  document.getElementById('mDelete').style.display='block';
+  segPick(a.cat);
+  openOverlay();
+}
+function saveApp(){
+  const name=document.getElementById('mName').value.trim()||'App';
+  const emoji=document.getElementById('mEmoji').value.trim()||'📱';
+  const min=parseInt(document.getElementById('mMin').value)||0;
+  if(editingId){
+    const a=state.apps.find(x=>x.id===editingId);
+    a.name=name;a.emoji=emoji;a.cat=segChoice;a.sec=min*60;
+  } else {
+    state.apps.push({id:Date.now(),name,emoji,color:'#2c2c2e',cat:segChoice,sec:min*60});
+  }
+  persist(); closeOverlay(); render(); toast('Gespeichert');
+}
+function deleteApp(){ state.apps=state.apps.filter(x=>x.id!==editingId); persist(); closeOverlay(); render(); toast('Gelöscht'); }
+function cycleCat(id){
+  const a=state.apps.find(x=>x.id===id); if(!a)return;
+  a.cat = a.cat==='unprod'?'prod':a.cat==='prod'?'neutral':'unprod';
+  persist(); render();
+}
+function openOverlay(){ document.getElementById('ov-app').classList.add('open'); }
+function closeOverlay(){ document.getElementById('ov-app').classList.remove('open'); }
+document.getElementById('ov-app').addEventListener('click',e=>{ if(e.target.id==='ov-app') closeOverlay(); });
+
+/* ---------- focus ---------- */
+function setFocusName(n){ document.getElementById('focusName').value=n; state.focusName=n;
+  const map={'Fokus':'📈','Lernen':'📚','Gym':'💪'}; document.querySelector('#s-create .fi').textContent=map[n]||'📈'; }
+function toggleStrict(){ state.strict=!state.strict; document.getElementById('strictSw').classList.toggle('on',state.strict); persist(); }
+function openSelectApps(){ toast('Apps für die Sperre auswählen'); }
+
+let focusTimer=null, focusEnd=0, focusDur=0, focusStrict=false;
+function startFocus(){
+  const h=parseInt(document.getElementById('durH').value)||0;
+  const m=parseInt(document.getElementById('durM').value)||0;
+  focusDur=(h*3600+m*60);
+  if(focusDur<=0){ toast('Bitte eine Dauer wählen'); return; }
+  focusStrict = state.strict;
+  focusEnd=Date.now()+focusDur*1000;
+  document.getElementById('frName').textContent=document.getElementById('focusName').value||'Fokus';
+  const btn=document.getElementById('frBtn');
+  btn.textContent = focusStrict?'Strikt – kein Abbruch':'Beenden';
+  btn.classList.toggle('strict',focusStrict);
+  btn.disabled = focusStrict;
+  document.getElementById('focusRun').classList.add('open');
+  tickFocus();
+  focusTimer=setInterval(tickFocus,250);
+}
+function tickFocus(){
+  const left=Math.max(0,Math.round((focusEnd-Date.now())/1000));
+  const mm=Math.floor(left/60), ss=left%60;
+  document.getElementById('frTime').textContent=String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0');
+  const C=2*Math.PI*104;
+  const frac=focusDur>0?(left/focusDur):0;
+  document.getElementById('frRing').setAttribute('stroke-dasharray',(C*frac)+' '+C);
+  if(left<=0){ completeFocus(); }
+}
+function completeFocus(){
+  clearInterval(focusTimer);
+  state.focusTotalSec+=focusDur;
+  if(focusDur>state.bestDetoxSec) state.bestDetoxSec=focusDur;
+  state.sessions.push({name:document.getElementById('frName').textContent,dur:focusDur,at:Date.now()});
+  persist();
+  document.getElementById('focusRun').classList.remove('open');
+  render();
+  toast('Fokus abgeschlossen · '+fmtHm(focusDur)+' zurückgewonnen 🌿');
+  go('progress');
+}
+function stopFocus(){
+  if(focusStrict) return;
+  clearInterval(focusTimer);
+  const done=focusDur-Math.max(0,Math.round((focusEnd-Date.now())/1000));
+  if(done>30){ state.focusTotalSec+=done; state.sessions.push({name:'Fokus',dur:done,at:Date.now()}); persist(); render(); }
+  document.getElementById('focusRun').classList.remove('open');
+  toast(done>30?('Gestoppt · '+fmtHm(done)+' gezählt'):'Fokus beendet');
+}
+
+/* ---------- misc ---------- */
+function startChallenge(n){ toast(n+'-Challenge gestartet 🌿'); }
+function toggleAcc(row){ const body=row.nextElementSibling; const open=body.classList.toggle('open');
+  row.querySelector('.chev').style.transform=open?'rotate(180deg)':''; }
+let toastT=null;
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),1900); }
+
+document.getElementById('strictSw').classList.toggle('on',state.strict);
+render();
+if(location.hash){ const h=location.hash.slice(1); if(screens.includes(h)) go(h); }
+</script>
+</body>
+</html>
