@@ -96,9 +96,13 @@ body{
 .laurel{color:#e9b64d;font-size:20px;opacity:.9}
 
 /* chart */
-.chart{height:150px;display:flex;align-items:flex-end;gap:2px;padding:10px 4px 0;position:relative}
-.chart .zero{position:absolute;left:0;right:0;top:52%;height:1px;background:rgba(255,255,255,.08)}
-.chart .bar{flex:1;border-radius:2px;position:relative;align-self:center;}
+.chart{height:150px;display:flex;align-items:stretch;gap:3px;padding:6px 2px 0;position:relative}
+.chart .zero{position:absolute;left:2px;right:2px;top:50%;height:1px;background:rgba(255,255,255,.10)}
+.chart .col{flex:1;display:flex;flex-direction:column;min-width:0}
+.chart .col .up,.chart .col .dn{height:50%;display:flex}
+.chart .col .up{align-items:flex-end}
+.chart .col .dn{align-items:flex-start}
+.chart .col i{width:100%;border-radius:3px;display:block}
 .chart-x{display:flex;justify-content:space-between;color:var(--muted2);font-size:12px;margin-top:6px;padding:0 2px}
 
 /* app list */
@@ -524,21 +528,25 @@ function render(){
 
 function renderChart(pct){
   const chart = document.getElementById('chart');
-  chart.querySelectorAll('.bar').forEach(b=>b.remove());
-  // deterministic-ish 24 bars, greener as productivity rises
+  chart.querySelectorAll('.col').forEach(c=>c.remove());
+  // 24 tidy hourly bars: green grows up (productive), red grows down (unproductive)
   let seed = 7;
   const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280;};
+  const zero=document.querySelector('.chart .zero');
   for(let i=0;i<24;i++){
-    const bar=document.createElement('div');
-    const mag = Math.round(6+rnd()*60);
-    const productive = rnd() < (pct/100)*0.9+0.1;
-    bar.className='bar';
-    bar.style.height=mag+'px';
-    if(productive){ bar.style.background='#34c759'; bar.style.alignSelf='flex-end'; bar.style.marginBottom='47%'; }
-    else { bar.style.background='#ff2d55'; bar.style.alignSelf='flex-start'; bar.style.marginTop='47%'; }
-    if(rnd()<0.12){ bar.style.background='#8e8e93'; }
-    chart.appendChild(bar);
+    const col=document.createElement('div'); col.className='col';
+    const up=document.createElement('div'); up.className='up';
+    const dn=document.createElement('div'); dn.className='dn';
+    const productive = rnd() < (pct/100)*0.85+0.08;
+    const h = Math.round(20+rnd()*60);          // % of the half height, tidy range
+    const bar=document.createElement('i');
+    bar.style.height=h+'%';
+    if(productive){ bar.style.background='#34c759'; up.appendChild(bar); }
+    else { bar.style.background='#ff2d55'; dn.appendChild(bar); }
+    col.appendChild(up); col.appendChild(dn);
+    chart.appendChild(col);
   }
+  if(zero) chart.appendChild(zero);
 }
 
 /* ---------- navigation ---------- */
